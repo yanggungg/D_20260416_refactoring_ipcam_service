@@ -1,0 +1,74 @@
+#
+#
+#
+#
+
+CROSS_COMPILE = arm_v5t_le-
+
+AS      =$(CROSS_COMPILE)as
+LD      =$(CROSS_COMPILE)ld
+CC      =$(CROSS_COMPILE)gcc
+CPP     =$(CC) -E
+AR      =$(CROSS_COMPILE)ar
+NM      =$(CROSS_COMPILE)nm
+STRIP   =$(CROSS_COMPILE)strip
+OBJDUMP =$(CROSS_COMPILE)objdump
+RANLIB	=$(CROSS_COMPILE)ranlib
+
+
+
+TOPDIR = $(shell pwd)
+TARGET = nfdal
+TARGET_ROOT = /home/seongho/filesys
+NFDVR = $(TARGET_ROOT)/NFDVR
+
+LIBDIR = -L$(NFDVR)/gnulib -L$(NFDVR)/lib
+LIBDIR += -L$(TARGET_ROOT)/usr/local/lib \
+			-L$(TARGET_ROOT)/usr/lib
+			
+INCLUDE = -I$(TOPDIR)/ -I$(NFDVR)/src/include -I$(NFDVR)/src/include/gui
+INCLUDE += -I$(TARGET_ROOT)/usr/local/include/ \
+			-I$(TARGET_ROOT)/usr/include/gtk-2.0 \
+			-I$(TARGET_ROOT)/usr/lib/gtk-2.0/include \
+			-I$(TARGET_ROOT)/usr/include/freetype2 \
+			-I$(TARGET_ROOT)/usr/include/libpng12 \
+			-I$(TARGET_ROOT)/usr/include/atk-1.0 \
+			-I$(TARGET_ROOT)/usr/local/include/pango-1.0 \
+			-I$(TARGET_ROOT)/usr/local/include/glib-2.0 \
+			-I$(TARGET_ROOT)/usr/local/lib/glib-2.0/include \
+			-I$(TARGET_ROOT)/usr/local/include/libglade-2.0 \
+			-I$(TARGET_ROOT)/usr/include/libxml2 
+
+
+CFLAGS 	:=  $(INCLUDE)
+
+SRCS := $(wildcard *.c) #scomm.o
+OBJECTS := $(patsubst %.c,%.o, $(wildcard *.c))
+
+
+%o: %.c
+	$(CC) -c -o $(CFLAGS) $@ $<
+
+all :	$(TARGET)
+
+nfdal:
+	$(CC) -c $(CFLAGS) $(SRCS) $(LIBDIR)
+	$(AR) r libnfdal.a $(OBJECTS)
+	$(RANLIB) libnfdal.a
+	$(AR) rs libnfdal.a $(OBJECTS)
+
+debug:
+	$(CC) -c $(CFLAGS) $(SRCS) -D_DEBUG
+	$(AR) r libnfdal.a $(OBJECTS)
+	$(RANLIB) libnfdal.a
+	$(AR) rs libnfdal.a $(OBJECTS)
+
+install:
+	@cp libnfdal.a $(NFDVR)/src/lib
+	@cp *.h $(NFDVR)/src/include/gui
+
+clean:
+	rm -rf test
+	rm -rf *.so *.a
+	rm -rf $(OBJECTS)
+	

@@ -1,0 +1,14 @@
+#ifndef __VW_SYS_CAMERA_IPCAM_INSTALL_SEARCH_FILTER_POPUP_H__
+#define __VW_SYS_CAMERA_IPCAM_INSTALL_SEARCH_FILTER_POPUP_H__
+
+enum {
+    APPLIED_FILTER_ADDR_RANGE = (1 << 0),
+    APPLIED_FILTER_HOSTNAME = (1 << 1),
+    APPLIED_FILTER_MODEL = (1 << 2),
+    APPLIED_FILTER_ASSIGNED_CAM = (1 << 3)
+};
+
+gint VW_Create_Camera_Filter_Popup_Open(NFWINDOW *parent);
+
+#endif
+

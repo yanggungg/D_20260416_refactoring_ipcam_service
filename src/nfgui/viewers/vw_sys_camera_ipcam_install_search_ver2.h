@@ -1,0 +1,18 @@
+#ifndef __VW_SYS_CAMERA_IPCAM_INSTALL_SEARCH_VER2_H__
+#define __VW_SYS_CAMERA_IPCAM_INSTALL_SEARCH_VER2_H__
+
+#define STR_EMPTY			""
+#define STR_OK				"OK"
+#define STR_NO_IMAGE		"NO IMAGE"
+#define STR_INVALID_IP		"INVALID IP"
+#define STR_NEED_CHANGE_PW	"NEED TO CHANGE PASSWORD"
+#define STR_CONNECT_FAIL	"CONNECTION FAIL"
+#define STR_UNSUPPORTED		"UNSUPPORTED"
+#define STR_LOGIN_FAIL		"LOGIN FAIL"
+#define STR_STREAM_FAIL		"STREAM FAIL"
+#define STR_CONNECTING		"CONNECTING"
+
+gint VW_Open_IPCamInstallSearch_Page_ver2(NFOBJECT *parent);
+int VW_IPCamInstallSearch_Page_ver2_mevt_cb(GdkEvent *event);
+
+#endif

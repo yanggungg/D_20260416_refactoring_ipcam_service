@@ -1,0 +1,1283 @@
+/*
+	### 할일 ###		
+		ip camera api 정리, error cb 처리 -> erro_code는 정리 됨
+
+		nf_ipcam_retry ( )
+		nf_ipcam_get_status( )
+				pipeline 상태		playing, pause, stop, null				
+
+typedef enum {
+  GST_STATE_VOID_PENDING        = 0,
+  GST_STATE_NULL                = 1,
+  GST_STATE_READY               = 2,
+  GST_STATE_PAUSED              = 3,
+  GST_STATE_PLAYING             = 4
+} GstState;
+
+typedef enum 
+{
+  GST_STATE_CHANGE_NULL_TO_READY		= (GST_STATE_NULL<<3) | GST_STATE_READY,
+  GST_STATE_CHANGE_READY_TO_PAUSED		= (GST_STATE_READY<<3) | GST_STATE_PAUSED,
+  GST_STATE_CHANGE_PAUSED_TO_PLAYING	= (GST_STATE_PAUSED<<3) | GST_STATE_PLAYING,
+  GST_STATE_CHANGE_PLAYING_TO_PAUSED	= (GST_STATE_PLAYING<<3) | GST_STATE_PAUSED,
+  GST_STATE_CHANGE_PAUSED_TO_READY		= (GST_STATE_PAUSED<<3) | GST_STATE_READY,
+  GST_STATE_CHANGE_READY_TO_NULL		= (GST_STATE_READY<<3) | GST_STATE_NULL
+} GstStateChange;
+
+
+		NF_NOTIFY_INFO
+			params[0]	status
+			params[1]	stop 일 때 (에러 발생시 이유)
+			params[2]   재시도 까지 남은 시간 
+
+		live일 때 화면 분할 정보 - 이창희 대리님 정리 중
+									올라와 있음 (4d1 기준)								
+
+	nf_record_put_frame( gint ch, gint reopen, gpointer frame, GError **Error);
+		frame = icodec_header + frame data;
+
+	
+	### 변경 내역 ###
+	2008-04-02 # choissi # API 이름 변경 
+		nf_cam_attr_set				=>	nf_cam_set_attr
+
+
+	2008-04-02 # choissi # API 추가
+		nf_play_get_thumbnail
+		nf_filesystem_get_progress
+		
+	2008-04-02 # choissi # API 이름 변경 
+		nf_set_cam_attr				=>	nf_cam_set_attr
+		nf_set_time						nf_time_get
+		nf_get_time						nf_time_set
+		nf_get_fs_lasttime				nf_filesystem_get_lasttime
+		nf_get_disk_info				nf_disk_get_info
+		nf_format_disk					nf_disk_format
+		nf_check_disk_start				nf_disk_check_start
+		nf_check_disk_stop				nf_disk_check_stop
+		nf_get_diskview					nf_disk_get_view
+		nf_get_hdd_usage				nf_disk_get_usage
+		nf_get_info_sig_type			nf_sig_type_get
+		nf_get_smart_status				nf_smart_get_status
+		nf_get_smart_data				nf_smart_get_data
+
+	2008-04-02 # choissi #  NF_PLAY_PARAM_T 변경
+		필드 추가
+		
+		cb_play_fxn_t	*cb_event;	
+		gpointer		*cb_context;	
+		
+		typedef void (*cb_play_fxn_t)(gint ch_num, NF_PLAY_CB_EVENT_E arg, void *context); 	
+*/
+
+/**
+	@brief				카메라 속성 변경
+	@param[in]	gint	ch
+	@param[in]	gint	brightness
+	@param[in]	gint	contrast
+	@param[in]	gint	tint
+	@param[in]	gint	color	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_cam_set_attr ( gint ch, gint brightness, gint contrast, gint tint, gint color );
+
+/**
+	@brief				시스템 시간 얻기 ( nano sec 단위 )
+	@param[out]	*time	GMT 부터 
+	@param[out]	*time_zone	timezone id
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_time_get( GTimeVal *time, guchar *time_zone);
+
+/**
+	@brief				시스템 시간 설정 ( nano sec 단위 )
+	@param[in]	time	GMT 부터 	
+	@param[in]	time_zone	timezone id
+	@param[in]	tz_diff_min
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_time_set( GTimeVal  time, guchar time_zone, gint tz_diff_min );
+
+/* Callback events */
+typedef enum _NF_SST_EVT_E {
+	NF_SST_EVT_NONE				= 0 ,
+	NF_SST_EVT_DISKFULL			= 1 ,
+	NF_SST_EVT_OWSTART			= 2 ,
+	NF_SST_EVT_OVERLAP			= 3 ,
+	NF_SST_EVT_IOERR			= 4 ,
+	NF_SST_EVT_FSSTARTBEG		= 16,
+	NF_SST_EVT_FSSTARTCMPL		= 17,
+	NF_SST_EVT_FORMATBEG		= 18,
+	NF_SST_EVT_FORMATCMPL		= 19,
+	NF_SST_EVT_RECOVERYBEG		= 20,
+	NF_SST_EVT_RECOVERYCMPL		= 21,
+	NF_SST_EVT_FSSTOPBEG		= 22,
+	NF_SST_EVT_FSSTOPCMPL		= 23,
+	NF_SST_EVT_DELDATABEG		= 24,
+	NF_SST_EVT_DELDATACMPL		= 25,
+	NF_SST_EVT_PRESERVEBEG		= 26,
+	NF_SST_EVT_PRESERVECMPL		= 27,
+	NF_SST_EVT_DISKCHKBEG		= 28,
+	NF_SST_EVT_DISKCHKCMPL		= 29,
+	NF_SST_EVT_DISKCHKBAD		= 30,
+	NF_SST_EVT_DISKCHKCANCEL	= 31,
+	NF_SST_EVT_MAX				= 31		/* Maximum value (!= count) */
+} NF_SST_EVT_E;
+
+/* Progress types */
+typedef enum _NF_SST_PRGT_E {
+	NF_SST_PRGT_NONE			= 0,
+	NF_SST_PRGT_FSSTART			= 1,
+	NF_SST_PRGT_FSSTOP			= 2,
+	NF_SST_PRGT_FORMAT			= 3,
+	NF_SST_PRGT_RECOVERY		= 4,
+	NF_SST_PRGT_DELETE			= 5,
+	NF_SST_PRGT_PRESERVE		= 6,
+	NF_SST_PRGT_CHKDISK			= 7,
+	NF_SST_PRGT_MAX				= 7		/* Maximum value (!= count) */
+} NF_SST_PRGT_E;
+
+/* Error codes */
+typedef enum _NF_SST_ERR_E{
+	NF_SST_ERR_NONE				= 0 ,
+	NF_SST_ERR_SEQERR			= 1 ,
+	NF_SST_ERR_INVPARAM			= 2 ,
+	NF_SST_ERR_INVSTM			= 3 ,
+	NF_SST_ERR_STMBSY			= 4 ,
+	NF_SST_ERR_STMERR			= 5 ,
+	NF_SST_ERR_DATALOCKED		= 6 ,
+	NF_SST_ERR_DISKFULL			= 7 ,
+	NF_SST_ERR_NODISK			= 8 ,
+	NF_SST_ERR_NOMEM			= 9 ,
+	NF_SST_ERR_NOSPACE			= 10,
+	NF_SST_ERR_IO				= 11,
+	NF_SST_ERR_TIMEOUT			= 12,
+	NF_SST_ERR_NODATA			= 13,
+	NF_SST_ERR_ENDDATA			= 14,
+	NF_SST_ERR_EMPTY			= 15,
+	NF_SST_ERR_MAX				= 15,		/* Maximum value (!= count) */ 
+} NF_SST_ERR_E;
+
+typedef void (*cb_event_fxn_t)(NF_SST_EVT_E event_num, gint arg, gpointer context); 
+
+
+typedef enum  _NF_DISK_WRITE_MODE_E {
+	NF_DISK_WRITE_MODE_WRITEONCE = 0,
+	NF_DISK_WRITE_MODE_OVERWRITE = 1
+} NF_DISK_WRITE_MODE_E;
+
+/**
+	@brief				디스크 저장 방법 설정					
+	@param[in]	w_mode	디스크 저장 방법 
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_writing_mode_change( NF_DISK_WRITE_MODE_E w_mode, GError **error );
+
+typedef struct _NF_SST_PROGRESS_T {
+	gchar 	Type;
+	gchar 	Reserved[3];
+	guint	Current;
+	guint	Total;
+	guint	TimeElapsed;
+	guint	TimeRemain;
+	guint	Private[3];
+} NF_SST_PROGRESS_T __attribute__((packed)); 
+
+/**
+	@brief				디스크 progress 조회
+	@param[in]	type	조회할 progress 종류
+	@param[out]	progress 결과값
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_filesystem_get_progress(NF_SST_PRGT_E type, NF_SST_PROGRESS_T  *progress); 
+
+/**
+	@brief				파일 시스템 시작 & 이벤트 통지 핸들러 등록
+	@param[in]	format_flag	포맷 허가 플래그
+	@param[in]	cb_event	이벤트 콜백 함수
+	@param[in]	cb_ctx		이벤트 콜백 context
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+	
+	nf_disk_get_info로 먼저 디스크 정보를 조회 한 후에 fs start를 할지 결정해야 한다.
+	신규로 추가된 disk에 대해서 format을 할지 말지에 대한 여부도 필요.
+	nf_filesystem_start가 호출되면 파일 시스템이 리커버리, 포맷등을 수행한다.
+	이때 진행 상황(큰 스텝)은 cb_event로 전달 되고 상세 진행 사항은
+	별도 api(nf_filesystem_get_progress)를 사용해서 폴링 한다.
+*/
+gboolean nf_filesystem_start( gint format_flag, cb_event_fxn_t cb_event, gpointer cb_ctx, GError **error );
+
+/*
+static void
+fsstart_event_function(int event, int arg, void *context)
+{
+	switch ( event ) {
+		case SST_EVT_FSSTARTBEG:
+			printf("%s: %s\n", __func__, sst_get_event_string(event));
+			((int *)context)[2] = 1;
+			break;
+		case SST_EVT_FSSTARTCMPL:
+			printf("\n%s: %s, error=%d\n",
+					__func__, sst_get_event_string(event), arg);
+			((int *)context)[0] = 1;
+			((int *)context)[1] = arg;
+			((int *)context)[2] = 0;
+			break;
+		case SST_EVT_FORMATBEG:
+			printf("%s: %s, disk=%u\n",
+					__func__, sst_get_event_string(event), arg);
+			((int *)context)[3] = 1;
+			break;
+		case SST_EVT_FORMATCMPL:
+			printf("\n%s: %s, error=%d\n",
+					__func__, sst_get_event_string(event), arg);
+			((int *)context)[3] = 0;
+			break;
+		case SST_EVT_RECOVERYBEG:
+			printf("%s: %s\n", __func__, sst_get_event_string(event));
+			((int *)context)[4] = 1;
+			break;
+		case SST_EVT_RECOVERYCMPL:
+			printf("\n%s: %s, error=%d\n",
+					__func__, sst_get_event_string(event), arg);
+			((int *)context)[4] = 0;
+			break;
+		default:
+			break;
+	}
+}
+
+static char fs_start_help[] = "fs_start [format_flag]";
+static int
+fs_start(int argc, char **argv)
+{
+	u8 format_flag;
+	int result;
+	volatile int context[5];
+	struct sst_progress_t progress;
+
+	if ( argc < 2 ) {
+		printf("Invalid arguments\n%s\n", fs_start_help);
+		return -1;
+	}
+	format_flag = atoi(argv[1]);
+
+	// Do fs start in non-blocking mode. 
+	memset((void *)context, 0, sizeof(context));
+	result = sst_fs_start(format_flag, 1,
+			fsstart_event_function, (void *)context);
+	if ( result < 0 ) {
+		printf("sst_fs_start() result: %d(%s)\n",
+				result, sst_get_error_string(result));
+		return result;
+	}
+
+	usleep(10000);
+	while ( !context[0] ) {
+		if ( context[3] ) {
+			if ( !sst_get_progress(SST_PRGT_FORMAT, &progress) &&
+					progress.ucType == SST_PRGT_FORMAT ) {
+				printf("\rFormatting: %u%% (%u / %u)",
+						progress.uCurrent * 100 / progress.uTotal,
+						progress.uCurrent, progress.uTotal);
+				fflush(stdout);
+			}
+		}
+		else if ( context[4] ) {
+			if ( !sst_get_progress(SST_PRGT_RECOVERY, &progress) &&
+					progress.ucType == SST_PRGT_RECOVERY ) {
+				printf("\rRecoverying: %u%% (%u / %u)",
+						progress.uCurrent * 100 / progress.uTotal,
+						progress.uCurrent, progress.uTotal);
+				fflush(stdout);
+			}
+		}
+		usleep(100000);
+	}
+	usleep(10000);
+	printf("File system start completed. result = %d(%s)\n",
+			context[1], sst_get_error_string(context[1]));
+	return context[1];
+} 		
+*/
+
+
+/**
+	@brief				파일 시스템 종료	
+	@param[in]	cb_event	이벤트 콜백 함수
+	@param[in]	cb_ctx		이벤트 콜백 context	
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_filesystem_stop( cb_event_fxn_t cb_event , gpointer cb_ctx, GError **error );
+
+
+/**
+	@brief				스토리지에 저장된 마지막 시간
+	@param[out]	*time	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_filesystem_get_lasttime( GTimeVal *time  );
+
+
+typedef struct _NF_DISK_INFO_T {
+	guchar TotalDisks;
+	guchar FormattedDisks;
+	guchar RemovedDisks;
+	guchar AddedDisks;
+	guchar GroupDisks[2];			// 그룹별 (internal,external) 디스크 갯수
+	guchar Reserved[2];
+	guchar DiskState[2][16];		// 디스크 상태
+									//	bit0: Existence flag
+									//	bit1: Added flag
+									//	bit2: Removed flag
+									//	bit3: Formatted flag
+	gchar  ModelNum[2][16][32];
+	guint  DiskSize[2][16];			// Kbytes
+} NF_DISK_INFO_T __attribute__((packed));
+
+/**
+	@brief				디스크 정보 얻기
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_disk_get_info( NF_DISK_INFO_T *disk_info, GError **error );
+
+
+/**
+	@brief				디스크 포맷하기                         	
+	@param[in]	grp_id	디스크 그룹 아이디 0:내부장치 1:외부장치 0xff:모든 디스크
+	@param[in]	disk_id	해당 그룹의 디스크 번호 : 0~15
+	@param[in]	cb_event	이벤트 콜백 함수
+	@param[in]	cb_ctx		이벤트 콜백 context
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_disk_format( gint grp_id, gint disk_id, cb_event_fxn_t cb_event, gpointer cb_ctx, GError **error);
+
+/**
+	@brief				디스크 검사 시작 - 디스크 그룹단위로 동작
+	@param[in]	grp_id	디스크 그룹 아이디 0:내부장치 1:외부장치
+	@param[in]	cb_event	이벤트 콜백 함수
+	@param[in]	cb_ctx		이벤트 콜백 context	
+	@param[out]	error	return location for a #GError, or %NULL		
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_disk_check_start(gint grp_id, cb_event_fxn_t cb_event, gpointer cb_ctx, GError **error);
+
+/**
+	@brief				디스크 검사 중지
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_disk_check_stop( void );
+
+/**
+	@brief				디스크 뷰 얻기
+	@param[in]	grp_id	디스크 그룹 아이디 0:내부장치 1:외부장치 0xff:모든 디스크
+	@param[in]	disk_id	해당 그룹의 디스크 번호 : 0~15
+	@param[in]	req_count 	요청한 갯수	
+	@param[out]	*elm_size	한 블럭당 사이즈 (단위:kbytes)	
+	@param[out]	*view_data  diskview 반환값
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_disk_get_view( gint grp_id, gint disk_id, gint req_count, gint *elm_size, gchar *view_disk, GError **error );
+
+/**
+	@brief				하드 디스크 사용량 얻기
+	@param[in]	grp_id	디스크 그룹 아이디 0:내부장치 1:외부장치 0xff:모든 디스크
+	@param[in]	disk_id	해당 그룹의 디스크 번호 : 0~15
+	@param[out]	used	사용한 용량 (단위:MB)
+	@param[out]	total	전체 용량 (단위:MB)
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_disk_get_usage( gint grp_id, gint disk_id, guint *used, guint *total, GError **error );
+
+
+/**
+	@brief				ptz 커맨드 실행
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_ptz_cmd( gint ch, gint cmd, gchar *param );
+/**
+	@brief				ptz 패턴 시작
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_ptz_pattern_start( gint p_no, gint dwell );
+/**
+	@brief				ptz 패턴 종료
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_ptz_pattern_stop();
+
+
+/**
+	@brief				비디오 시그널 타입 얻기
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_sig_type_get( gint *sig_type );
+
+typedef enum _NF_SMART_E {
+	NF_SMART_STATUS_OK		=0,
+	NF_SMART_STATUS_FAIL	=1,
+	NF_SMART_NOT_SUPPORTED	=2,
+ 	NF_SMART_NO_DISK		=3
+} NF_SMART_E;
+
+typedef struct _NF_SMART_STATUS_T
+{
+	/* SMART status for each disk. */
+	gchar	Status[2][16];
+	/*
+	 * -1 if a drive does not support temperature reporting.
+	 *  Ignore this field if ucStatus[drive] field is NOT_SUPPORTED or NO_DISK.
+	 */
+	gint	Temperature[2][16];
+} NF_SMART_STATUS_T;
+
+/**
+	@brief				디스크 SMART 상태 얻기
+	@param[out]	status	SMART 상태 값
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_smart_get_status (NF_SMART_STATUS_T *status, GError **error);
+
+/**
+	@brief				디스크 SMART 데이터 얻기
+	@param[out]	data	SMART 상태 원본 데이터
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_smart_get_data( gchar data[2048], GError **error);
+
+
+typedef enum _NF_DISPLAY_E {
+	NF_DISPLAY_FULL 		= 0x00, 	/* 1 */
+	NF_DISPLAY_QUAD 		= 0x01,		/* 4 */
+	NF_DISPLAY_HEXA_A 		= 0x02, 	/* 6, A-type */
+	NF_DISPLAY_HEXA_B 		= 0x03, 	/* 6, B-type */
+	NF_DISPLAY_OCTA_A 		= 0x04, 	/* 8, A-type */
+	NF_DISPLAY_OCTA_B 		= 0x05, 	/* 8, B-type */
+	NF_DISPLAY_NONA 		= 0x06, 	/* 9 */
+	NF_DISPLAY_TRIDECA 		= 0x07, 	/* 13 */
+	NF_DISPLAY_HEXADECA 	= 0x08,		/* 16 */
+	NF_DISPLAY_HEXATRICONTA = 0x09,		/* 36 */
+	NF_DISPLAY_SEQ 			= 0x20, 	/* TBD*/
+	NF_DISPLAY_SEQ_DIV 		= 0x21 		/* TBD*/
+} NF_DISPLAY_E ;
+      
+typedef struct 
+/**
+	@brief				spot 시작
+	@param[in]	spot_ch	spot 채널
+	@param[in]	mode 	화면분할 구분
+	@param[in]	ch_arr 	채널 구성
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+	
+	구현할 때 covert 신경 써야 함.
+*/
+gboolean nf_spot_start( gint spot_ch, NF_DISPLAY_E mode, gchar ch_arr[4]);
+
+/**
+	@brief				spot 변경
+	@param[in]	spot_ch spot 채널
+	@param[in]	mode 	화면분할 구분
+	@param[in]	ch_arr 	채널 구성
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_spot_change( gint spot_ch, NF_DISPLAY_E mode, gchar ch_arr[4]);
+
+/**
+	@brief				spot 중지
+	@param[in]	spot_ch	spot 채널
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_spot_stop( gint spot_ch);
+
+
+typedef enum _NF_IPCAM_RET_E {
+        NF_IPCAM_RET_OK = 0,
+        NF_IPCAM_RET_INIT_ERROR,                   //1) neon init error
+        NF_IPCAM_RET_SERVER_NOT_FOUND,             //2) server not found (dns reslove error)
+        NF_IPCAM_RET_CONNECT_TIMEOUT,              //3) connect timeout
+        NF_IPCAM_RET_REQ_BAD,						//4)
+        NF_IPCAM_RET_REQ_NOT_FOUND,                //5) http request failed (404 not found)
+        NF_IPCAM_RET_REQ_AUTH_FAILED,              //6) http request failed (authentication failed)
+        NF_IPCAM_RET_REQ_SERVER_ERROR,             //7) http internal server error ( over 500 )
+        NF_IPCAM_RET_REQ_ERROR,                    //8) 
+        NF_IPCAM_RET_REQ_BUFFER,                   //9)
+        NF_IPCAM_RET_READ_ERROR,                   //10) read error, timeout
+        NF_IPCAM_RET_JPEG_ERROR,                   //11) JPEG header, end marker check
+} NF_IPCAM_RET_E;
+
+/**
+	@brief				감시 영상(라이브) 시작
+	@param[in]	mode 	화면분할 구분
+	@param[in]	ch_arr 	채널 구성
+	@param[in]	au_in_vd_ch 오디오 채널 (mute : -1)
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+	
+	구현할 때 covert 신경 써야 함.
+*/
+gboolean nf_live_start( NF_DISPLAY_E mode, gchar ch_arr[32], gint au_in_vd_ch );
+/**
+	@brief				감시 영상(라이브) 화면 변경(분할,채널맵핑)
+	@param[in]	mode 	화면분할 구분
+	@param[in]	ch_arr 	채널 구성
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_live_change( NF_DISPLAY_E mode, gchar ch_arr[32]);
+/**
+	@brief				감시 영상(라이브) 중지 
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_live_stop( void );
+
+/**
+	@brief				라이브 오디오 채널 변경 
+	@param[in]	au_in_vd_ch 비디오 채널 ( 해당 채널과 연결된 오디오가 재생됨 )
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_liveaudio_change( gint au_in_vd_ch );
+/**
+	@brief				라이브 오디오 볼륨 조절
+	@param[in]	au_in_vd_ch 비디오 채널 ( 해당 채널과 연결된 오디오가 재생됨 )
+	@param[in]	vol 	오디오 볼륨 (0~100)
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_liveaudio_volume( gint au_in_vd_ch, gint vol);
+
+
+/**
+	@brief				줌 시작	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_zoom_start( gint ch_num );
+/**
+	@brief				줌 인/아웃
+	@param[in]	inout	배율
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_zoom_inout(gint inout);
+/**
+	@brief				줌 이동
+	@param[in]	xpos	x 위치 
+	@param[in]	ypos	y 위치
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_zoom_move(gint xpos, gint ypos);
+/**
+	@brief				줌 종료	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_zoom_stop( void );
+
+typedef struct _NF_VIDEO_OBJECT  {
+	gint 	ch;				// channel
+	gint	xpos;			// position	
+	gint	ypos;
+	gint	width;			// size
+	gint	height;
+	gint 	zorder;			// z-order
+	gint	visible;
+} NF_VIDEO_OBJECT;
+
+
+typedef enum _NF_PLAY_PARAM_MODE_E {
+	NF_PLAY_PARAM_MODE_START			= 0,	//STOP_MODE to START_MODE transition avaliable
+	NF_PLAY_PARAM_MODE_PAUSE			= 1,	//STOP_MODE to PAUSE_MODE transition avaliable
+	NF_PLAY_PARAM_MODE_NEXT_FRAME		= 2	
+} NF_PLAY_PARAM_MODE_E;
+
+typedef enum _NF_PLAY_PARAM_RATE_E {
+	NF_PLAY_PARAM_RATE_001				= 1,
+	NF_PLAY_PARAM_RATE_002				= 2,
+	NF_PLAY_PARAM_RATE_004				= 4,
+	NF_PLAY_PARAM_RATE_008				= 8,
+	NF_PLAY_PARAM_RATE_016				= 16,
+	NF_PLAY_PARAM_RATE_032				= 32,
+	NF_PLAY_PARAM_RATE_064				= 64,
+	NF_PLAY_PARAM_RATE_128				= 128
+} NF_PLAY_PARAM_RATE_E;                                     
+
+typedef enum _NF_PLAY_PARAM_DIR_E {
+	NF_PLAY_PARAM_DIR_FOWARD			= 0,
+	NF_PLAY_PARAM_DIR_BACKWARD			= 1
+} NF_PLAY_PARAM_DIR_E;                                     
+
+typedef enum NF_PLAY_PARAM_SHOW_E {
+	NF_PLAY_PARAM_SHOW_FAST				= 0,
+	NF_PLAY_PARAM_SHOW_SLOW				= 1
+} NF_PLAY_PARAM_SHOW_E;                                     
+
+
+typedef enum NF_PLAY_CB_EVENT_E {
+	NF_PLAY_CB_NO_VIDEO					= 0,
+	NF_PLAY_CB_NO_END_VIDEO				= 1,
+	NF_PLAY_CB_OVERLAPPED				= 2
+} NF_PLAY_CB_EVENT_E;                                     
+
+typedef void (*cb_play_fxn_t)(gint ch_num, NF_PLAY_CB_EVENT_E arg, void *context); 
+
+typedef struct _NF_PLAY_PARAM_T {	
+	GTimeVal  		StartTime;		// play start time
+	GTimeVal 		SearchTime;		// play search time
+	GTimeVal 		EndTime;		// play end time	
+	GTimeVal 		Interval;		// 파노라마 서치 일 때
+	
+	guint			VideoObjectCnt
+	NF_VIDEO_OBJECT VideoObjectArr[32];
+						
+	gchar 			AudioInVideoChan;
+	gchar			Reserved[3];
+		
+	NF_PLAY_PARAM_MODE_E	PlayMode;	
+	NF_PLAY_PARAM_RATE_E	PlayRate;
+	NF_PLAY_PARAM_DIR_E		Direction;
+	NF_PLAY_PARAM_SHOW_E	SlowFlag;
+	
+	cb_play_fxn_t	*cb_event;
+	gpointer		cb_context;
+	
+} NF_PLAY_PARAM_T __attribute__ ((aligned(4)));
+
+
+
+/**
+	@brief				재생 시작
+	@param[out]	handle	player handle
+	@param[in]	param	재생 파라메터
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_play_start( gpointer *handle, NF_PLAY_PARAM_T *param, GError **error );
+
+/**
+	@brief				재생 변경
+	@param[in]	handle	player handle
+	@param[in]	param	재생 파라메터
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_play_change( gpointer handle, NF_PLAY_PARAM_T *param, GError **error );
+
+/**
+	@brief				재생 변경 - video object 속성변경
+	@param[in]	handle	player handle
+	@param[in]	vo_idx	바꿀 video object idx
+	@param[in]	vo		video object 정보
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_play_change_vo( gpointer handle, gint vo_idx, NF_VIDEO_OBJECT *vo, GError **error );
+
+/**
+	@brief				재생 변경 채널간 swap (a와 b의 위치를 바꾼다.)
+	@param[in]	handle	player handle
+	@param[in]  voa_idx video object A의 VideoObjectArr idx
+	@param[in]  vob_idx video object B의 VideoObjectArr idx
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_play_swap_vo( gpointer handle, gint voa_idx, gint vob_idx, GError **error );
+
+/**
+	@brief				현재 재생중인 시간
+	@param[in]	handle	player handle
+	@param[out]	*playtime	재생중인 스트림의 타임
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_play_get_playtime( gpointer handle, GTimeVal *playtime, GError **error );
+
+/**
+	@brief				재생 중지
+	@param[in]	handle	player handle
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_play_stop( gpointer handle );
+
+
+
+typedef struct _NF_THUMBNAIL_PARAM_T {
+	gint		Ch;				// 조회 채널
+	GTimeVal  	Time;			// 조회 시간
+	gint		OffsetSec;		//
+	gint		Width;
+	gint		Height;	
+} NF_THUMBNAIL_PARAM_T __attribute__ ((aligned(4))) ;
+
+typedef struct _NF_THUMBNAIL_OUTPUT_T {
+	GTimeVal  	Time;
+	gpointer	DataPtr;
+	guint		DataSize;		
+	gpointer	Reserved;		// 내부적으로 사용하는 데이터 (사용금지)
+} NF_THUMBNAIL_OUTPUT_T __attribute__ ((aligned(4))) ;
+
+/**
+	@brief				thumbnail 얻기 
+	@param[in]	param	파라메터 
+	@param[out] *output	결과값  (주의: 버퍼 해제 필수, nf_play_free_thumbnail로 해제)
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred	
+*/
+gboolean nf_play_get_thumbnail( NF_THUMBNAIL_PARAM_T *param, NF_THUMBNAIL_OUTPUT_T *output, GError **error );
+
+
+// Get TimeLine
+typedef struct _NF_TIMELINE_PARAM_T {
+	GTimeVal	TimeBegin;			
+	guint	Resolution;	// Resolution in seconds, 1 day = 86400, 1hour = 3600, ...
+	gushort	Count;		// Requested time slice count per channel.
+	guchar	MaxChannel;
+	guchar	SplitChannel;	// if 0 usCount*sizeof(NF_TIMELINE_ELEM_T)
+							// if 1 usCount*sizeof(NF_TIMELINE_ELEM_T)*ucMaxChannel
+	guint	ChannelMask;	// Bitwise channel mask.
+} NF_TIMELINE_PARAM_T __attribute__ ((aligned(4))) ;
+
+typedef struct _NF_TIMELINE_ELEM_T
+{
+	gchar Reason;		// NF_RECORD_REASON_TYPE_E
+	gchar CodecType;	// NF_CODEC_TYPE_E
+	gchar Res;			// NF_RESOLUTION_E
+	gchar FrameRate;	
+	// 필드가 추가 되어야 함
+} NF_TIMELINE_ELEM_T; 
+
+
+/**
+	@brief				타임라인 얻기
+	@param[in]	param	타임라인 조회 파라메터
+	@param[out]	elem	타임라인 조회 결과 리턴할 곳
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+	
+	param 설정대로 예상 최대 elem 갯수만큼 버퍼를 잡아놓고 호출해야함
+*/
+gboolean nf_timeline_get( NF_TIMELINE_PARAM_T *param, NF_TIMELINE_ELEM_T *elem, GError **error);
+
+#define LOG_P1_MASK_SIZE_TMP  	512
+
+typedef enum _NF_LOG_PARAM_DIR_E {
+	NF_LOG_PARAM_DIR_FORWARD	= 0,
+	NF_LOG_PARAM_DIR_BACKWARD	= 1
+}NF_LOG_PARAM_DIR_E;
+
+typedef enum _NF_LOG_PARAM_MODE_E {
+	NF_LOG_PARAM_MODE_TIME	= 0,
+	NF_LOG_PARAM_MODE_LOGID	= 1
+}NF_LOG_PARAM_MODE_E;
+
+// Get Log
+typedef struct _NF_LOG_PARAM_T {
+	GTimeVal	TimeBegin;			
+	GTimeVal	TimeEnd;			
+	NF_LOG_PARAM_DIR_E		Direction;
+	NF_LOG_PARAM_MODE_E		Mode;
+	guint64		LogID;
+	guint		RequestCount;				/* Requesting Log Count. */
+	guint		TypeMask;					/* Type Masking Bit. */
+	gchar		Param1Mask[LOG_P1_MASK_SIZE_TMP];	/* Parameter1 mask array. */
+} NF_LOG_PARAM_T __attribute__ ((aligned(4))) ;
+
+typedef struct _NF_LOG_RESULT_HEADER_T {
+	guint	RequestCount;
+	guint	ResultCount;
+	/*
+	 * Followed LogCmdData_t type array,
+	 * array size = uRequestCount,
+	 * data size = uRequestCount * sizeof(LogCmdData_t)
+	 */
+} NF_LOG_RESULT_HEADER_T;
+
+typedef struct _NF_LOG_DATA_T {
+	guint64 TimeStamp;
+	guchar Type;
+	guchar Param1;
+	guchar Param2;
+	guchar Reserved[5];
+	guint64 LogID;
+	gchar Text[256];
+} NF_LOG_DATA_T __attribute__((packed));
+
+/**
+	@brief				이벤트 로그 조회
+	@param[in]	param	이벤트 로그 조회 파라메터
+	@param[out]	header	이벤트 로그 조회 결과 헤더
+	@param[out]	elem	이벤트 로그 조회 결과 리턴할 곳
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_eventlog_get( NF_LOG_PARAM_T *param, NF_LOG_RESULT_HEADER_T *header, 
+								NF_LOG_DATA_T *elem, GError **error);
+								
+/**
+	@brief				이벤트 로그 발생
+	@param[in]	*log_data 로그 데이터
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_eventlog_put( NF_LOG_DATA_T *log_data, GError **error);
+
+/**
+	@brief				패닉 레코드 시작
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_panic_rec_start( GError **error );
+/**
+	@brief				패닉 레코드 중지
+	@param[out]	error	return location for a #GError, or %NULL	
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean nf_panic_rec_stop(  GError **error );
+
+
+/* Resolutions */
+typedef enum {
+	NF_RES_NTSC_CIF			= 0x01,
+	NF_RES_NTSC_2CIF		= 0x02,
+	NF_RES_NTSC_4CIF		= 0x04,
+	NF_RES_NTSC_4CIFP		= 0x84,
+	NF_RES_PAL_CIF			= 0x11,
+	NF_RES_PAL_2CIF			= 0x12,
+	NF_RES_PAL_4CIF			= 0x14,
+	NF_RES_PAL_4CIFP		= 0x94,
+	NF_RES_640x480			= 0x85,
+	NF_RES_720x480			= 0x86,
+	NF_RES_720x576			= 0x87,
+	NF_RES_800x600			= 0x88,
+	NF_RES_1024x768			= 0x89,
+	NF_RES_1280x1024		= 0x8A,
+	NF_RES_1600x1200		= 0x8B
+} NF_RESOLUTION_E;
+	
+/* Frame types */
+typedef enum {
+	NF_FRAME_TYPE_P			= 0,	/* P frame */
+	NF_FRAME_TYPE_I			= 1,	/* I frame */
+	NF_FRAME_TYPE_NULL		= 2,	/* Null frame */
+	NF_FRAME_TYPE_START		= 3,	/* Start frame */
+	NF_FRAME_TYPE_END		= 4,	/* End frame (end of clip) */
+	NF_FRAME_TYPE_RI		= 5,	/* Reverse I frame */
+	NF_FRAME_TYPE_AUDIO		= 10	/* Audio frame */
+} NF_FRAME_TYPE_E;
+
+/* Codec types */
+typedef enum {
+	NF_CODEC_TYPE_ICODEC	= 0,	/* ICODEC (traditional) */
+	NF_CODEC_TYPE_H264		= 1,	/* H.264 */
+	NF_CODEC_TYPE_H264K		= 2,	/* H.264 key frame mode */
+	NF_CODEC_TYPE_JPEG		= 3,	/* Jpeg */
+	NF_CODEC_TYPE_MPEG4		= 4		/* Mpeg4 */
+} NF_CODEC_TYPE_E;
+
+/* Record reasons */
+typedef enum {
+	NF_RECORD_REASON_NOTHING		= 0,	/* None */
+	NF_RECORD_REASON_TIMER			= 1,	/* By timer (schedule) */
+	NF_RECORD_REASON_ALARM			= 2,	/* By alarm */
+	NF_RECORD_REASON_MOTION			= 3,	/* By motion */
+	NF_RECORD_REASON_USER			= 4,	/* By user event */
+	NF_RECORD_REASON_MANUAL			= 5,	/* By manual (panic) */
+	NF_RECORD_REASON_PRE			= 6		/* Pre recorded */
+} NF_RECORD_REASON_TYPE_E; 
+
+
+/*-----------------------------------------------------------------------------*/
+// notify api 를 사용해서 전달되는 정보 정보
+
+typedef struct    _NF_NOTIFY_INFO 
+{ 
+   guint      type; 
+   GTimeVal   timestamp; 
+   union {       
+      struct    {   guint       params[4];   } d; 
+      struct    {   gchar       chmap[16];   } c; 
+      struct    {   guint       len;             
+               gpointer    ptr;        
+               guint       reserved[2]; } p; 
+   }; 
+} NF_NOTIFY_INFO; 
+
+
+1) motion,alarm,sensor,vloss 
+   NF_NOTIFY_PARAM type의 NF_NOTIFY_INFO를 사용    
+      d.params[0]      아날로그 채널별 비트 마스크 
+      d.params[1]   ipcamera 채널별 비트 마스크 
+             
+2) analog_rec, ipcam_rec 
+   NF_NOTIFY_CHMAP 
+      c.chmap[0~15]   'T'   timer rec 
+            'P'   panic 
+            'A' alarm 
+            'M' motion 
+            ' '   none 
+                                           
+3) enc_status   - 녹화중인 채널의 갯수 
+   NF_NOTIFY_PARAM type의 NF_NOTIFY_INFO를 사용 
+      d.params[0]      현재 analog fps 합계 
+      d.params[1]      현재 ipcamera fps 합계 
+      d.params[2]      max analog fps 
+      d.params[3]      max ipcamera fps 
+
+4) net_status   - 네트워크 클라이언트 상태 
+   NF_NOTIFY_PARAM type의 NF_NOTIFY_INFO를 사용 
+      d.params[0]      접속중인 클라이언트 
+      d.params[1]      live mode 클라이언트 
+      d.params[2]      playback mode 클라이언트 
+
+5) net_rxtx   - 네트워크 트래픽 모니터 
+   NF_NOTIFY_PARAM type의 NF_NOTIFY_INFO를 사용 
+      d.params[0]      netsvr status 100~0 
+                  트래픽이 원할한지를 표현함 
+                  (프레임 레이트 컨트롤 변수로 확인해야겠음) 
+      d.params[1]      netsvr rx    
+      d.params[2]      netsvr tx    
+
+6) disk_usage   - 디스크 사용량 
+   NF_NOTIFY_PARAM type의 NF_NOTIFY_INFO를 사용 
+      d.params[0]      사용량 (MB) 
+      d.params[1]      총용량 (MB) 
+
+
+//  notify callback 사용하기 
+void
+dummy_notify_api( NF_NOTIFY_INFO *pinfo, gpointer data )
+{
+	g_message("%s data[%s]", __FUNCTION__, data);
+	
+	g_message("%s type[%d] [%d][%d][%d][%d] ", __FUNCTION__, 
+					pinfo->type,
+					pinfo->d.params[0],
+					pinfo->d.params[1],
+					pinfo->d.params[2],
+					pinfo->d.params[3] );
+	
+}
+      
+{
+	gulong 		cb_handle = 0;
+	gboolean	cb_remove_ret = 0;
+	NF_NOTIFY_INFO	*pinfo;
+	
+	cb_handle= nf_api_notify_connect_cb( "sensor", dummy_notify_api, "sensor");
+	g_message("%s connected cb_handle[%d]",__FUNCTION__, cb_handle);
+
+	cb_handle= nf_api_notify_connect_cb( "sensor", dummy_notify_api, "sensor");
+	g_message("%s connected cb_handle[%d]",__FUNCTION__, cb_handle);
+			
+	pinfo = nf_api_notify_new();
+		
+	pinfo->d.params[0] = 3;
+	pinfo->d.params[1] = 3;
+	pinfo->d.params[2] = 9;
+	pinfo->d.params[3] = 8;
+		
+	g_object_set(_nf_notify, "sensor", pinfo, NULL);
+	g_message("%s object set",__FUNCTION__);
+		
+	cb_remove_ret = nf_api_notify_remove_cb ("sensor", cb_handle);
+	g_message("%s remove cb_handle ret[%d]",__FUNCTION__, cb_remove_ret);	
+	
+	pinfo->d.params[3] = 9;
+	
+	g_object_set(_nf_notify, "sensor", pinfo, NULL);
+	g_message("%s object set",__FUNCTION__);
+		
+	nf_api_notify_free( pinfo);
+	
+}
+
+
+# 사용 예) 
+
+1) 각 카메라의 motion 감지 를 알고 싶다. 
+
+      #include "nf_notify.h" 
+          
+      NF_NOTIFY_INFO *pnotify;    
+      pnotify = nf_api_notify_get( "motion" ); 
+    
+      if( !pnotify )   { 
+         g_error("항목이 없습니다"); 
+      }else{ 
+         for(int i=0; i<16; i++) 
+         { 
+            if ( pnotify->d.params[0] & (1<<i) ) 
+               print(" %d ch motion detection\n"); 
+         }       
+         nf_api_notify_free(pnotify); // 동적할당 받은 것이므로 해제가 필요 
+      } 
+
+2) analog 카메라의 record모드를 얻어 오고 싶다. 
+
+      #include "nf_notify.h" 
+          
+      NF_NOTIFY_INFO *pnotify;    
+      pnotify = nf_api_notify_get( "analog_rec" ); 
+    
+      if( !pnotify )   { 
+         g_error("항목이 없습니다"); 
+      }else{ 
+         for(int i=0; i<16; i++) 
+         {          
+            print(" %d ch  rec_mode [%c]\n",  i, pnotify->c.chmap[i]); 
+         }       
+         nf_api_notify_free(pnotify); // 동적할당 받은 것이므로 해제가 필요 
+      } 
+
+
+3) network 트래픽 감지 
+
+      #include "nf_notify.h" 
+          
+      NF_NOTIFY_INFO *pnotify;    
+       
+      while(1){       
+            pnotify = nf_api_notify_get( "net_rxtx" );             
+            if( !pnotify )   { 
+               g_error("항목이 없습니다"); 
+            }else{ 
+                
+               int rx = pnotify->d.params[0] ; 
+               int tx = pnotify->d.params[1] ; 
+
+               nf_api_notify_free(pnotify); // 동적할당 받은 것이므로 해제가 필요 
+                
+               printf("net rx[%d] tx[%d]\n", rx,tx); 
+                
+            }          
+      }    
+
+/*-----------------------------------------------------------------------------*/
+
+/**
+	@brief				sysdb 초기화
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred					
+*/
+gboolean 
+nf_api_sysdb_init()
+
+/**
+	@brief				sysdb 해당 카테고리의 값들을 default로 되돌린다.
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred					
+*/
+gboolean 
+nf_api_sysdb_default( const gchar *category )
+
+/**
+	@brief				sysdb 해당 카테고리의 값을 save 한다.
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred					
+*/
+gboolean 
+nf_api_sysdb_save( const gchar *category )
+
+/**
+	@brief				sysdb save all
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+void nf_api_sysdb_save_all()
+
+/**
+	@brief				sysdb 해당 카테고리의 값을 dump 한다.
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred					
+*/
+gboolean 
+nf_api_sysdb_dump( const gchar *category )
+
+/**
+	@brief				sysdb 조회
+	@param[in]	key		조회 하고 싶은 sysdb key
+	@param[out]	retval	조회 결과 (G_TYPE_STRING)
+	@param[out]	error	return location for a #GError, or %NULL
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred					
+*/
+gboolean 
+nf_api_sysdb_get_key0(	const gchar *key, 
+						GValue *retval, GError **error)
+
+/**
+	@brief				sysdb 조회
+	@param[in]	key		조회 하고 싶은 sysdb key
+	@param[in]	idx1	조회 하고 싶은 idx 번호
+	@param[out]	retval	조회 결과
+	@param[out]	error	return location for a #GError, or %NULL
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+						
+	@see				@nf_api_sysdb_set_cam_title
+*/
+gboolean 
+nf_api_sysdb_get_key1( 	const gchar *key, 
+						const guint idx0 , 
+						GValue *retval, GError **error)
+
+/**
+	@brief				sysdb 조회
+	@param[in]	key		조회 하고 싶은 sysdb key
+	@param[in]	idx1	조회 하고 싶은 idx1 번호
+	@param[in]	idx2	조회 하고 싶은 idx2 번호
+	@param[out]	retval	조회 결과
+	@param[out]	error	return location for a #GError, or %NULL
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+						
+	@see				@nf_api_sysdb_set_cam_title
+*/
+gboolean 
+nf_api_sysdb_get_key2(	const gchar *key, 
+						const guint idx0, const guint idx1 , 
+						GValue *retval,	GError **error)
+						
+/**
+	@brief				sysdb 해당 키값의 string을 리턴 (복사본)
+	@param[in]	key		조회 하고 싶은 sysdb key
+	@return	gchar *		string pointer on success, NULL if an error occurred					
+*/
+gchar *
+nf_api_sysdb_get_str( const gchar *property_name )
+
+
+/**
+	@brief				sysdb 해당 키값의 str형태로 저장된 map 밸류 얻기
+	@param[in]	key		조회 하고 싶은 sysdb key
+	@return		gint	value on success, minus value if an error occurred
+	
+*/
+gint
+nf_api_sysdb_get_strmap( const gchar *property_name, gint idx )
+
+
+/**
+	@brief				sysdb 해당 키값의 bool 리턴 받기
+	@param[in]	key		조회 하고 싶은 sysdb key
+	@return		gint	value on success, minus value if an error occurred
+	
+*/
+gint
+nf_api_sysdb_get_bool( const gchar *property_name )
+
+/* 
+	int랑 uint는 어쩐다.
+	에러 났을 때 처리가 힘드네.
+*/
+
+/**
+	@brief				sysdb 설정
+	@param[in]	key		설정 하고 싶은 sysdb key
+	@param[out]	retval	설정 결과 (G_TYPE_STRING)
+	@param[out]	error	return location for a #GError, or %NULL
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred					
+*/
+gboolean 
+nf_api_sysdb_set_key0(	const gchar *key, 
+						GValue *retval, GError **error)
+
+/**
+	@brief				sysdb 설정
+	@param[in]	key		설정 하고 싶은 sysdb key
+	@param[in]	idx1	설정 하고 싶은 idx 번호
+	@param[out]	retval	설정 결과
+	@param[out]	error	return location for a #GError, or %NULL
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean 
+nf_api_sysdb_set_key1( 	const gchar *key, 
+						const guint idx0 , 
+						GValue *retval, GError **error)
+/**
+	@brief				sysdb 설정
+	@param[in]	key		설정 하고 싶은 sysdb key
+	@param[in]	idx1	설정 하고 싶은 idx1 번호
+	@param[in]	idx2	설정 하고 싶은 idx2 번호
+	@param[out]	retval	설정 결과
+	@param[out]	error	return location for a #GError, or %NULL
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean 
+nf_api_sysdb_set_key2(	const gchar *key, 
+						const guint idx0, const guint idx1 , 
+						GValue *retval,	GError **error)
+
+/**
+	@brief				sysdb 기능 테스트
+	@return	gboolean	%TRUE on success, %FALSE if an error occurred
+*/
+gboolean 
+nf_api_sysdb_test()
+{
+	guint i = 0;
+	gchar buff[128];
+
+/*	
+<item key="sys.test.uint"				type="UINT" 	min="" max="" def="" val="33" />
+<item key="sys.test.int"				type="INT"	 	min="" max="" def="" val="-2" />
+<item key="sys.test.bool"				type="BOOL" 	min="" max="" def="" val="1" />
+*/	
+	g_message("----------------------------------------");
+	//while(1)
+	{
+		GValue 		ret_value = {0,};
+		GValue 		set_value = {0,};		
+
+		nf_api_sysdb_get_key0("sys.test.uint", &ret_value, NULL);
+		g_message ( "NF_HOST sys.test.uint [%d]", g_value_get_uint(&ret_value));
+		g_value_unset(&ret_value);
+
+		nf_api_sysdb_get_key0("sys.test.int", &ret_value, NULL);
+		g_message ( "NF_HOST sys.test.int [%d]", g_value_get_int(&ret_value));
+		g_value_unset(&ret_value);
+		
+		nf_api_sysdb_get_key0("sys.test.bool", &ret_value, NULL);
+		g_message ( "NF_HOST sys.test.bool [%d]", g_value_get_boolean(&ret_value));
+		g_value_unset(&ret_value);
+				
+		nf_api_sysdb_get_key0("sys.info.sysid", &ret_value, NULL);
+		g_message ( "NF_HOST SYSID [%s]", g_value_get_string(&ret_value));
+		g_value_unset(&ret_value);
+		
+		nf_api_sysdb_get_key0("sys.info.swver", &ret_value, NULL);
+		g_message ( "NF_HOST SWVER [%s]", g_value_get_string(&ret_value));
+		g_value_unset(&ret_value);
+				
+		
+		g_value_init( &set_value,  G_TYPE_STRING);
+		g_snprintf(buff,sizeof(buff), "test software id_%d", ++i);
+		g_value_set_string(&set_value, buff);		
+		nf_api_sysdb_set_key0("sys.info.swver", &set_value, NULL);						
+		g_value_unset(&set_value);
+			
+		nf_api_sysdb_get_key0("sys.info.swver", &ret_value, NULL);
+		g_message ( "NF_HOST SWVER [%s]", g_value_get_string(&ret_value));
+		g_value_unset(&ret_value);		
+		
+		//nf_api_sysdb_dump_all();
+		usleep(1);		
+	}				
+	g_message("----------------------------------------");
+
+#if 0	// testset	
+	g_message("---- init");	
+	nf_api_sysdb_dump("sys");
+	g_return_val_if_fail ( nf_api_sysdb_load("sys") , FALSE);
+	
+	g_message("---- load");	
+	nf_api_sysdb_dump("sys");
+	
+	nf_api_sysdb_default("sys.date");	
+	g_message("---- def");	
+	nf_api_sysdb_dump("sys");
+	
+#endif
+	
+	return 1;
+}
+            

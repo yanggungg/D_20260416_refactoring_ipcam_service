@@ -1,0 +1,22 @@
+#ifndef __WEBRA_HOST_ENV_H__
+#define __WEBRA_HOST_ENV_H__
+
+#include "webra_host.h"
+#include "webra_host_json.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+gboolean webra_host_env_init(json_t* env_json);
+gboolean webra_host_env();
+gboolean webra_host_env_free();
+
+////////////////////////////////////////////////////////////////////////////////
+
+const gchar* webra_host_env_get(gchar* key);
+////////////////////////////////////////////////////////////////////////////////
+const gchar* webra_host_cookie_get(gchar* key);
+gboolean     webra_host_cookie_set(gchar* key, gchar* value, gint expire);
+gboolean     webra_host_cookie_remove(gchar* key);
+
+////////////////////////////////////////////////////////////////////////////////
+#endif // __WEBRA_HOST_ENV_H__

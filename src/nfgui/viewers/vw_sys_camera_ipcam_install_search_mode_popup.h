@@ -1,0 +1,11 @@
+#ifndef __VW_SYS_CAMERA_IPCAM_INSTALL_SEARCH_MODE_POPUP_H__
+#define __VW_SYS_CAMERA_IPCAM_INSTALL_SEARCH_MODE_POPUP_H__
+
+enum {
+    CAM_INSTALL_MODE_SINGLE = 0,
+    CAM_INSTALL_MODE_MULTI,
+};
+
+gint VW_Camera_Install_Mode_Popup_Open(NFWINDOW *parent);
+
+#endif

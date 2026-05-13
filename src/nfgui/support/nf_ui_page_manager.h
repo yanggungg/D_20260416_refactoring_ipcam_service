@@ -1,0 +1,355 @@
+#ifndef __NF_UI_PAGE_MANAGER_H__
+#define __NF_UI_PAGE_MANAGER_H__
+
+
+#include "../viewers/objects/nfobject.h"
+/*
+typedef enum {
+    PID_NONE = -1,
+    PID_LIVE_DISPLAY = 0,
+    PID_SETUP_MENU,
+    PID_MAIN_MENU,
+    PID_CAMERA_SETUP,
+    PID_DISPLAY_SETUP,
+    PID_SOUND_SETUP,
+    PID_SYSTEM_SETUP,
+    PID_USER_SETUP,
+    PID_NETWORK_SETUP,
+    PID_EVENT_SETUP,
+    PID_DISK_SETUP,
+    PID_RECORD_SETUP,
+    PID_ARCHIVING,
+    PID_SEARCH,
+    PID_LIVE_LOG,
+    PID_LIVE_PTZ,
+
+    NUM_NF_PAGES,
+} PAGEID;
+typedef enum {
+    SYS_STATE_NONE = -1,
+
+    SYS_STATE_LOGIN,
+    SYS_STATE_DIALOG,
+    SYS_STATE_LIVELOG,
+
+    SYS_STATE_END,
+} SYSTEM_STATE;
+*/
+
+typedef enum {
+    FUNCID_NONE = -1,
+
+    FUNCID_FN_ARCHIVING,
+    FUNCID_FORMAT,
+    FUNCID_CHECKDSK,
+    FUNCID_BURNING,
+    FUNCID_TIMECHANGE,
+    FUNCID_FAC_DEFAULT,
+    FUNCID_SYSDATA_LOAD,
+    FUNCID_SYSDATA_SAVE,
+    FUNCID_FW_UPGRADE,
+    FUNCID_WAIT_POPUP,
+
+    NUM_NF_FUNCS,
+
+} FUNCID;
+
+
+typedef enum {
+    PGID_NONE = -1,
+
+    PGID_POWEROFF,
+    PGID_SYS_INFO,
+    PGID_SYS_FWUP,
+    PGID_LIVEDIVMENU,
+    PGID_LIVEDISPLAY,
+    PGID_LIVECTRLBAR,
+    PGID_LIVEWCTRLBAR,
+    PGID_LIVE_LOG,
+    PGID_LIVE_PLAYBACK,
+    PGID_LIVE_PLAYBACK_TIME,
+
+    PGID_LIVE_VKEY,             // 10
+    PGID_PTZ,
+    PGID_PTZ_PARAM,
+    PGID_PTZ_SETUP,
+    PGID_PTZ_PROP,
+    PGID_PTZ_TOUR_CONF,
+    PGID_ARCH_BURN,
+    PGID_ARCH_INFO,
+    PGID_RECORD,
+    PGID_ARCHIVING,
+
+    PGID_REC_EVT_SCHED,         // 20
+    PGID_REC_ACAM_PARAM,
+    PGID_SETUP,
+    PGID_SETUPMENU,
+    PGID_SUB_SETUPMENU,
+    PGID_SETUP_VKEY,
+    PGID_CAM_COLOR_BAR,
+    PGID_MAINMENU,
+    PGID_SNAPSHOT,
+    PGID_SEARCH,
+
+    PGID_SEARCH_ARCH,           // 30
+    PGID_DIGIZOOM,
+    PGID_USER_ADD,
+    PGID_USERPWD,
+    PGID_USERPWD_AUTOLOGOUT,
+    PGID_MBOX,
+    PGID_SEQ_CONF,
+    PGID_SEQ_CONF_MENU,
+    PGID_SEQ_SETUP,
+    PGID_SPOT_CONF,
+
+    PGID_SPOT_CONF_MENU,        // 40
+    PGID_SPOT_SETUP,
+    PGID_PANORAMA,
+    PGID_PLAYBACK,
+    PGID_PLAYBACK_CONTROL,
+    PGID_MOTION_AREA,
+    PGID_MOTION_AREA_MENU,
+    PGID_MOTION_AREA_SUBMENU,
+    PGID_MOTION_CONF,
+    PGID_IPCAM_PROP,
+
+    PGID_POPUPWND,          // 50
+    PGID_MESSAGEBOX,
+    PGID_RMCID_CONF,
+    PGID_FW_INFO,
+    PGID_PTZ_KEY,
+    PGID_LIVE_START_MENU,
+    PGID_PLAYBACK_CTRLBAR,
+    PGID_PLAYBACK_START_MENU,
+    PGID_PLAYBACK_CONTROL_BOX,
+    PGID_PLAYBACK_CONTROL_DISP_BOX,
+
+    PGID_PLAYBACK_CONTROL_FUNC_BOX,             // 60
+    PGID_COMBO_MENU,
+    PGID_LIVE_TIMELINE,
+    PGID_LIVE_CALENDAR,
+    PGID_LIVE_EVENT_LOG,
+    PGID_LIVE_AUDIO_INPUT,
+    PGID_LIVE_AUDIO_OUTPUT,
+    PGID_LIVE_ALARM_STATUS,
+    PGID_LIVE_NET_STATUS,
+    PGID_LIVE_DISK_STATUS,
+
+    PGID_LIVE_DIV_POPUP,                    // 70
+    PGID_REC_AUTO_CONFIG,
+    PGID_REC_AUTO_INTENSIVE_CONFIG,
+    PGID_REC_PARAM_COMBO_ALL,
+    PGID_SET_DATE_TIME_POPUP,
+    PGID_SYS_LOAD_DATA_POPUP,
+    PGID_DISK_SMART_POPUP,
+    PGID_EVT_EMAIL_EDIT_POPUP,
+    PGID_COPY_SCHED_POPUP,
+    PGID_CH_MASK_POPUP,
+
+    PGID_EVT_TYPE_DATA_POPUP,       // 80
+    PGID_REC_SCHED_CONTROL,
+    PGID_ARCH_RESERVE,
+    PGID_ARCH_VERIFY,
+    PGID_ARCH_DATA_INFO,
+    PGID_ARCH_PLAY_CBOX,
+    PGID_IMAGE_SETUP_ADVANCED,
+    PGID_ALM_SCHED_CONTROL,
+    PGID_SYS_SAVE_DATA_POPUP,
+    PGID_OSD_POPUP,
+
+    PGID_REC_PARAM_COMBO_ALL_FPSLIMIT,      // 90
+    PGID_SETUP_VKEY_NUM,
+    PGID_IP_EDITOR_POPUP,
+    PGID_SNAPSHOT_POPUP,
+    PGID_IPCAM_UPGRADE,
+    PGID_VENDOR_CODE,
+    PGID_EVT_PRESET_EDIT,
+    PGID_USER_DISP_SETUP,
+    PGID_TAMPER_REDIRECT_CONF,
+    PGID_TAMPER_DEFOCUS_CONF,
+
+    PGID_HD_SPOT_CONF,              // 100
+    PGID_HD_SPOT_CONF_MENU,
+    PGID_HD_SPOT_SETUP,
+    PGID_PTZ_SCAN_POPUP,
+    PGID_PTZ_TOUR_POPUP,
+    PGID_PTZ_RMC_PRST,
+    PGID_CAM_DIRECT_CONFIG_MODE,
+    PGID_CAM_VIDEO_STREAM_PREVIEW,
+    PGID_COPY_CHMASK_POPUP,
+    PGID_PTZ_FULL_MODE,
+
+    PGID_EVT_FTP_EDIT_POPUP,        // 110
+    PGID_CAM_VCA_SETUP,
+    PGID_DELETE_DATA,
+    PGID_FILTER_ADD,
+    PGID_PASS_HELP_POPUP,
+    PGID_RECORD_HELP_POPUP,
+    PGID_QC_TEST,
+    PGID_DETECT_NEWFW_POPUP,
+    PGID_PASSAGE_POPUP,
+    PGID_CAMERA_INSTALL_MODE_POPUP,
+
+    PGID_USER_GUIDE,                // 120
+    PGID_IPCAMERA_INSTALL,
+    PGID_IPCAMERA_SET_POPUP,
+    PGID_MODIFY_POINT_POPUP,
+    PGID_IPCAMERA_FWUP_PRG_POPUP,
+    PGID_FAC_INIT,
+    PGID_DISK_RAID_EASY_CONF,
+    PGID_DISK_RAID_ADVANCED_CONF,
+    PGID_DISK_RAID_WARN,
+    PGID_DISK_RAID_AVAILABLE_LIST,
+    
+    PGID_DETECT_NEWFW_DETAIL_INFO_POPUP,    //130
+    PGID_VCA_ZOOM,
+    PGID_TEXT_BOX,                  
+    PGID_SELF_START_POPUP,
+    PGID_SELF_CHECK_POPUP,
+    PGID_SELF_RESULT_POPUP,
+    PGID_SETUP_VKEY_HEX,
+    PGID_POS_SETTING_POPUP,
+    PGID_START_SEQURINET_POPUP,
+    PGID_ROI_SELECT_LEVEL_POPUP,
+    
+    PGID_PROGRESS_FWUP,                     //140
+    PGID_QC_AUDIO_TESTER_POPUP,
+    PGID_PROVIDE_DEVINFO_NOTICE,    
+    PGID_PROVIDE_DEVINFO_WARNING,       
+    PGID_UNBLOCK_AUTHCODE,
+    PGID_LICENSE_ENTERCODE_POPUP,
+    PGID_DVABX_OBJECT_FILTER_EDIT_POPUP,
+    PGID_BUILTIN_IDZ_FILTER_EDIT_POPUP,
+    PGID_BUILTIN_IPZ_FILTER_EDIT_POPUP,
+    PGID_AI_SEARCH_FILTER_EDIT_POPUP,
+
+    PGID_CAMERA_INSTALL_NVR_LOGIN_POPUP,
+    PGID_CAMERA_INSTALL_OPTION_POPUP,
+    PGID_IPCAMERA_INSTALL_MODE_POPUP,
+    PGID_CAMERA_INSTALL_NVR_MANAGE_POPUP,
+    PGID_CAMERA_INSTALL_CHANNEL_DATA_SAVE_POPUP,
+    PGID_CAMERA_INSTALL_CAM_LIST_FILTER_POPUP,
+    PGID_CAMERA_INSTALL_CAM_LOGIN_POPUP,
+    PGID_INSTALL_SSL_CERTIFICATE_POPUP,
+    PGID_FIND_SSL_CERTIFICATE_POPUP,
+    PGID_DIAGNOSTIC_DATA_SAVE_POPUP,
+
+
+#if 0
+    PGID_SYSLOGON,
+    PGID_DISPLAY,
+    PGID_REC_IPCAM_PARAM,
+    PGID_PLAY,
+    PGID_FULLSCR,
+    PGID_TIMECHANGE,
+    PGID_ESCAPEPANIC,
+    PGID_ARCH_START,
+    PGID_CAP_MOUSEMOVE,
+    PGID_LOCK,
+    PGID_UNLOCK,
+    PGID_SEQLIVE,
+    PGID_SIMPTZCON,
+    PGID_PANIC,
+#endif
+
+    NUM_NF_PAGES,
+} PAGEID;
+
+#define DEFAULT_OPEN_PAGES  (3)
+
+void nfui_page_manager_init();
+//gboolean nfui_get_confirm(PAGEID cur_page, PAGEID new_page);
+void nfui_page_open(PAGEID pid, NFOBJECT* pobj, const gchar* user);
+void nfui_page_close(PAGEID pid, NFOBJECT* pobj);
+
+guint nfui_get_open_page_count();
+NFOBJECT* nfui_get_nth_page(gint i);
+PAGEID nfui_get_nth_pgid(gint i);
+
+
+PAGEID nfui_get_cur_page(NFOBJECT **cur_page);
+PAGEID nfui_get_pid_by_object(NFOBJECT *object);
+NFOBJECT* nfui_get_object_by_pid(PAGEID pid);
+
+gchar* nfui_get_page_user(PAGEID pid, NFOBJECT *obj);
+gchar* nfui_get_last_user();
+
+void nfui_set_user_def_pages(const gchar *user_name);
+
+
+void nfui_func_start(FUNCID fid, NFOBJECT* obj);
+void nfui_func_end(FUNCID fid, NFOBJECT *obj);
+gint nfui_get_func_count();
+
+FUNCID nfui_func_get_fid();
+
+int wnd_bring_to_front_by_id(PAGEID pid);
+int wnd_bring_to_front(NFOBJECT *obj);
+int wnd_send_to_back(NFOBJECT *obj);
+
+#ifdef USE_NEW_MODE_CONTROL
+/*************************************************************
+ * GUI Mode Control..
+ * **********************************************************/
+
+// Global Conditions
+#define GC_NORMAL   0
+#define GC_BGBURN   1
+#define GC_NODISK   2
+#define GC_PANIC    3
+
+#define NUM_GLOBAL_COND 4
+
+
+// Allow Modes..
+typedef enum {
+    AM_NONE = -1,
+    AM_DENY = 0,
+    AM_ALLOW,
+} ALLOW_MODE;
+
+typedef enum {
+    NFAT_NONE = 0,
+    NFAT_OPERATION,
+    NFAT_OPEN,
+    NFAT_CLOSE,
+    NFAT_CL_OPEN,
+    NFAT_END,
+} NFACTION_TYPE;
+
+typedef enum {
+    NFAS_NONE = -1,
+
+    // Operations related..
+    NFAS_OP_ARCHIVE = 0,
+
+    // windows related..
+    NFAS_PG_LIVEDISPLAY = 10,
+    NFAS_PG_SETUPMENU,
+    NFAS_PG_MAIN_MENU,
+    NFAS_PG_RECORDSETUP,
+    NFAS_PG_SYSTEMSETUP,
+
+
+    NFAS_END,
+
+} NFACTION_STATE;
+
+
+
+// for nf_ui_page_manager.c
+gint nfmc_get_global_cond(gint gc);
+gboolean nfmc_do_action(NFOBJECT *cur_wnd, NFACTION_TYPE type, NFACTION_STATE state, gpointer act_func, gpointer func_param, gpointer destroy_func);
+
+
+// for nf_ui_parse_xml.c
+ALLOW_MODE nfui_get_allow_mode(NFACTION_STATE cur_state, NFACTION_STATE new_state);
+
+#endif  // USE_NEW_MODE_CONTROL
+
+
+#endif  // __NF_UI_PAGE_MANAGER_H__
+
+
+
+

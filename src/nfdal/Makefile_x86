@@ -1,0 +1,86 @@
+#
+#
+#
+#
+
+CROSS_COMPILE = 
+
+AS      =$(CROSS_COMPILE)as
+LD      =$(CROSS_COMPILE)ld
+CC      =$(CROSS_COMPILE)gcc
+CPP     =$(CC) -E
+AR      =$(CROSS_COMPILE)ar
+NM      =$(CROSS_COMPILE)nm
+STRIP   =$(CROSS_COMPILE)strip
+OBJDUMP =$(CROSS_COMPILE)objdump
+RANLIB	=$(CROSS_COMPILE)ranlib
+
+
+
+TOPDIR = $(shell pwd)
+TARGET = nfdal
+TARGET_ROOT = /home/seongho/skshin_filesys
+NFDVR = $(TARGET_ROOT)/NFDVR
+
+MACRO = -D_REENTRANT -D_LIBC_REENTRANT -DARCH_ARM 	\
+		-DRELEASE=$(RELEASE) -DMAJOR=$(MAJOR) -DMINOR=$(MINOR) 
+
+CFLAGS += -Wall -O2 -fsigned-char
+LDFLAGS += -lgdbm -lgsocket -lunp -Wl,--export-dynamic
+
+LIBDIR = -L$(NFDVR)/gnulib -L$(NFDVR)/lib
+LIBDIR += -L$(TARGET_ROOT)/opt/gtkdfb/lib \
+			-L$(TARGET_ROOT)/usr/local/lib
+			
+INCLUDE = -I./include
+INCLUDE += -I/usr/include/glib-2.0 \
+			-I/usr/include/freetype2
+#			-I$(TARGET_ROOT)/opt/gtkdfb/include/gtk-2.0 \
+			-I$(TARGET_ROOT)/opt/gtkdfb/lib/gtk-2.0/include \
+			-I$(TARGET_ROOT)/opt/gtkdfb/include/cairo \
+			-I$(TARGET_ROOT)/opt/gtkdfb/include/directfb \
+			-I$(TARGET_ROOT)/usr/local/include/gstreamer-0.10 \
+			-I$(TARGET_ROOT)/usr/include/freetype2 \
+			-I$(TARGET_ROOT)/usr/include/libpng12 \
+			-I$(TARGET_ROOT)/opt/gtkdfb/include/atk-1.0 \
+			-I$(TARGET_ROOT)/opt/gtkdfb/include/pango-1.0 \
+			-I$(TARGET_ROOT)/opt/gtkdfb/include/glib-2.0 \
+			-I$(TARGET_ROOT)/opt/gtkdfb/lib/glib-2.0/include \
+			-I$(TARGET_ROOT)/opt/gtkdfb/include/libglade-2.0 \
+			-I$(TARGET_ROOT)/usr/include/libxml2 
+
+CFLAGS 	:=  $(INCLUDE)
+
+SRCS := $(wildcard *.c) #scomm.o
+OBJECTS := $(patsubst %.c,%.o, $(wildcard *.c))
+
+
+%o: %.c
+	$(CC) -c -o $(CFLAGS) $@ $<
+
+all :	$(TARGET)
+
+nfdal:
+	gcc -Wall -g -c *.c -I ./include `pkg-config --cflags --libs gtk+-2.0 libglade-2.0 gthread-2.0`
+#	$(CC) -c $(CFLAGS) $(SRCS) $(LIBDIR)
+	$(AR) r libnfdal.a $(OBJECTS)
+	$(RANLIB) libnfdal.a
+	$(AR) rs libnfdal.a $(OBJECTS)
+#	gcc -shared -Wl,-soname,libtest.so.1 -o libtest.so.1 $(OBJECTS) -lc
+
+debug:
+	$(CC) -c $(CFLAGS) $(SRCS) -D_DEBUG
+	$(AR) r libnfdal.a $(OBJECTS)
+	$(RANLIB) libnfdal.a
+	$(AR) rs libnfdal.a $(OBJECTS)
+#	gcc -shared -Wl,-soname,libtest.so.1 -o libtest.so.1 $(OBJECTS) -lc
+
+install:
+	@cp libnfdal.a ../nfapp/lib
+	@cp *.h ../nfapp/include
+
+clean:
+	rm -rf test
+	rm -rf *.so *.a
+	rm -rf $(OBJECTS)
+	

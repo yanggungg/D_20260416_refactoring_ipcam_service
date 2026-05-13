@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This is a config file for IPX UX. -->
+<!-- The depth of node is always 2. -->
+
+<itx_base>
+	<display>
+		<videoloss_string>VIDEO LOSS</videoloss_string>
+		<endvideo_string>END VIDEO</endvideo_string>
+	</display>
+
+	<vsm>
+		<!-- vsm message pumping service interval : milli seconds -->
+		<timer_interval>30</timer_interval>
+	</vsm>
+	
+	<cmm>
+		<max_comm_cnt>16</max_comm_cnt>
+		<dmsg>0</dmsg>
+	</cmm>
+
+	<scm>
+		<!-- service sleep time : micro seconds -->
+		<thread_sleep_time>10000</thread_sleep_time>
+		<default_max_media_count>4</default_max_media_count>
+	</scm>
+	
+	<wnd>
+		<dmsg>2</dmsg>
+	</wnd>
+
+	<alt>
+		<dmsg>9</dmsg>
+		<dbg_timeout_use>0</dbg_timeout_use>
+		<dbg_timeout_value>5</dbg_timeout_value>
+	</alt>
+</itx_base>	

@@ -1,0 +1,33 @@
+# 추적: src/, include/, 리팩토링 산출물(.md)
+# 제외: 빌드 산출물, 루트 바이너리, 외부 데이터, 에디터 부산물
+
+# 1) 루트의 모든 것 제외 후 필요한 것만 화이트리스트
+/*
+!/.gitignore
+!/src/
+!/include/
+!/checklist.md
+!/context-notes.md
+
+# 2) 빌드 산출물 (모든 깊이)
+*.o
+*.a
+*.so
+*.so.*
+*.lo
+*.d
+
+# 3) 임시/백업
+*.tmp
+*.bak
+*.swp
+*.orig
+*.rej
+*~
+
+# 4) 에디터/툴/플랫폼
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db

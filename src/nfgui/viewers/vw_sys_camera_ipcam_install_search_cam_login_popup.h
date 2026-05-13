@@ -1,0 +1,7 @@
+#ifndef __VW_SYS_CAMERA_IPCAM_INSTALL_SEARCH_CAM_LOGIN_POPUP_H__
+#define __VW_SYS_CAMERA_IPCAM_INSTALL_SEARCH_CAM_LOGIN_POPUP_H__
+
+gint VW_OpenMode_Camera_Login_Popup_Open(NFWINDOW *parent, CAMERA_INFO_T *cam_info);
+
+
+#endif

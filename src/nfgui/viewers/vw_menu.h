@@ -1,0 +1,269 @@
+/*
+ * vw_menu.c
+ *	- dependency : vw_main_menu_honeywell
+ *
+ * Written by Jungkyu Park. <parangi@itxsecurity.com>
+ * Copyright (c) ITX security, May 31, 2012
+ *
+ */
+
+#ifndef __VW_MENU_H
+#define __VW_MENU_H
+
+#define MAX_TAB_CNT     16
+
+enum {
+	CAMERA_SUBMENU = 0,
+	DISPLAY_SUBMENU,
+	AUDIO_SUBMENU,
+	USER_SUBMENU,
+	NETWORK_SUBMENU,
+	SYSTEM_SUBMENU,
+	STORAGE_SUBMENU,
+	EVENT_SUBMENU,
+
+	SYS_SUBMENU_CNT
+};
+
+#define MAX_SUB_CNT		32
+
+
+// dependency : vw_main_menu_honeywell
+
+
+// SYS_SUBMENU - CAMERA
+enum _SYS_SUBMENU_CAMERA
+{
+	SYS_SUB1_CAMERA_TITLE = 0,
+	SYS_SUB1_IMAGE_SETUP,
+	SYS_SUB1_ONVIF_IMAGE_SETUP,
+	SYS_SUB1_COVERT_SETUP,
+	SYS_SUB1_MOTION_SENSOR,
+	SYS_SUB1_ONVIF_MOTION_SENSOR,	
+	SYS_SUB1_CAMERA_TYPE,
+	SYS_SUB1_PTZ_SETUP,
+	SYS_SUB1_PRIVACY_MASK,	
+    SYS_SUB1_TAMPER_SETUP,
+    SYS_SUB1_ANALOG_TYPE,
+	SYS_SUB1_INSTALL_MODE,
+	SYS_SUB1_VCA_SETUP_ITX,
+	SYS_SUB1_VCA_REV_SETUP_ITX,
+	SYS_SUB1_VCA_SETUP_S1,
+	SYS_SUB1_BUILTIN_DLVA_SETUP_ITX,
+	SYS_SUB1_ADVANCED_DLVA_SETUP_ITX,
+	SYS_SUB1_SPECIAL_CAM_SETUP,
+	SYS_SUB1_IPCAMERA_INSTALL,
+	SYS_SUB1_FISHEYE_SETUP,	
+	SYS_SUB1_ANALYSIS_SETUP_ITX,
+	SYS_SUB1_CNT
+};
+
+// SYS_SUBMENU - DISPLAY
+enum _SYS_SUBMENU_DISPLAY
+{
+	SYS_SUB2_OSD	= 0,
+	SYS_SUB2_MONITOR,
+	SYS_SUB2_SEQUENCE,
+	SYS_SUB2_SPOTOUT,
+	SYS_SUB2_HD_SPOTOUT,
+	SYS_SUB2_LOOP,
+	SYS_SUB2_POSATM,	
+	SYS_SUB2_ADVANCED_DUAL,	
+	SYS_SUB2_CNT
+};
+
+// SYS_SUBMENU - SOUND
+enum _SYS_SUBMENU_SOUND
+{
+	SYS_SUB3_AUDIO	= 0,
+	SYS_SUB3_BUZZER,
+	SYS_SUB3_CNT
+};
+
+// SYS_SUBMENU - USER
+enum _SYS_SUBMENU_USER
+{
+	SYS_SUB4_MANAGEMENT	= 0,
+	SYS_SUB4_AUTHORITY,
+	SYS_SUB4_CNT
+};
+
+// SYS_SUBMENU - NETWORK
+enum _SYS_SUBMENU_NETWORK
+{
+	SYS_SUB5_IPSETUP	= 0,
+	SYS_SUB5_DDNS,
+	SYS_SUB5_EMAIL,
+	SYS_SUB5_NETSTAT,
+	SYS_SUB5_SECURITY,
+	SYS_SUB5_SNMP,
+	SYS_SUB5_CABLE_TEST,
+	SYS_SUB5_RTP,
+	SYS_SUB5_CNT
+};
+
+// SYS_SUBMENU - SYSTEM
+enum _SYS_SUBMENU_SYSTEM
+{
+	SYS_SUB6_DATETIME	= 0,
+	SYS_SUB6_MANAGEMENT,
+	SYS_SUB6_INFORMATION,
+	SYS_SUB6_CONTROLDEVICE,
+	SYS_SUB6_SUPPORT_IPCAM,
+	SYS_SUB6_SECURITY,
+	SYS_SUB6_POSATM,	
+	SYS_SUB6_LICENSE,
+	SYS_SUB6_CNT
+};
+
+// SYS_SUBMENU - STORAGE
+enum _SYS_SUBMENU_STORAGE
+{
+	SYS_SUB7_INFOMATION	= 0,
+	SYS_SUB7_OPERATION,
+	SYS_SUB7_CONFIGURATION,
+	SYS_SUB7_SMARTSETUP,
+	SYS_SUB7_CNT
+};
+
+// SYS_SUBMENU - EVENT
+enum _SYS_SUBMENU_EVENT
+{
+	SYS_SUB8_ALARMOUT	= 0,
+	SYS_SUB8_EVENTNOTI,
+	SYS_SUB8_ALARMSENSOR,
+	SYS_SUB8_MOTIONSENSOR,
+	SYS_SUB8_VIDEOLOSS,
+	SYS_SUB8_VCA_EVENT_ITX,
+	SYS_SUB8_SYSTEMEVENT,
+	SYS_SUB8_TAMPER,
+	SYS_SUB8_VCA_EVENT_S1,	
+	SYS_SUB8_BUILTIN_DLVA_EVENT_ITX,
+	SYS_SUB8_POSATM_EVENT,
+	SYS_SUB8_ANALYSIS_EVENT_ITX,
+	SYS_SUB8_CNT
+};
+
+// SYS_SUBMENU - EVENT - EVENT NOTIFICATION
+enum _SYS_SUBMENU_EVENT_
+{
+	SYS_EVENTNOTI_BUZZER	= 0,
+	SYS_EVENTNOTI_DISP,
+	SYS_EVENTNOTI_MAIL,
+	SYS_EVENTNOTI_FTP,
+	SYS_EVENTNOTI_SMS,
+	SYS_EVENTNOTI_MOBILEPUSH,
+	SYS_EVENTNOTI_CNT
+};
+
+// SYS_SUBMENU - EVENT - ALARM SENSOR
+enum _SYS_SUBMENU_EVENT_ALARMSENSOR
+{
+	SYS_ALARM_SENSOR_CAM	= 0,
+	SYS_ALARM_SENSOR_LOCAL,
+	SYS_ALARM_SENSOR_CNT
+};
+
+// REC_SUBMENU
+enum _REC_SUBMENU
+{
+	REC_SUB_OPER	= 0,
+	REC_SUB_CONT,
+	REC_SUB_MOT,
+	REC_SUB_ALARM,
+	REC_SUB_PANIC,
+	REC_SUB_NETSTREAM,
+	REC_SUB_CALCUL,
+	REC_SUB_AUDIOMAP,	
+	REC_SUB_CNT
+};
+
+// ARCH_SUBMENU
+enum _ARCH_SUBMENU
+{
+	ARCH_SUB_NEW_ARCH	= 0,
+	ARCH_SUB_RESERVED,
+	ARCH_SUB_DATA_PB,
+	ARCH_SUB_DEV_SETUP,
+	ARCH_SUB_CNT
+};
+
+// SEARCH_SUBMENU
+enum _SEARCH_SUBMENU
+{
+	SEARCH_SUB_TIME	= 0,
+	SEARCH_SUB_THUMBNAIL,
+	SEARCH_SUB_EVENT,
+	SEARCH_SUB_TEXT,
+    SEARCH_SUB_VA_STATISTIC,
+	SEARCH_SUB_SMART,
+	SEARCH_SUB_SMART_REV,
+	SEARCH_SUB_DEEPLEARNING,	
+	SEARCH_SUB_CNT
+};
+
+// SYS_SUB7_OPERATION - DELETE
+enum _SYS_SUB7_OPERATION_DELETE
+{
+	SYS_SUB7_OPERATION_DELETE	= 0,
+	SYS_SUB7_OPERATION_CNT
+};
+
+enum _USERGUIDE_SUBMENU
+{
+	USERGUIDE_SUB_TAB1	= 0,
+	USERGUIDE_SUB_TAB2,
+	USERGUIDE_SUB_TAB3,
+	USERGUIDE_SUB_TAB4,
+	USERGUIDE_SUB_TAB5,	
+	USERGUIDE_SUB_TAB6,	
+	USERGUIDE_SUB_TAB7,	
+	USERGUIDE_SUB_TAB8,	
+	USERGUIDE_SUB_TAB9,	
+	USERGUIDE_SUB_CNT
+};
+
+typedef struct _MENU_INFO {
+    gint    cnt;
+    gint    menu_pos[MAX_SUB_CNT];
+    gchar   menu_str[MAX_SUB_CNT][40];    
+} MENU_INFO;
+
+typedef struct _MENU_CF {
+    MENU_INFO sys_sub1;
+    MENU_INFO sys_sub2;
+    MENU_INFO sys_sub3;
+    MENU_INFO sys_sub4;
+    MENU_INFO sys_sub5;
+    MENU_INFO sys_sub6;
+    MENU_INFO sys_sub7;
+    MENU_INFO sys_sub8;
+    MENU_INFO sys_event_noti;
+    MENU_INFO sys_alarm_sensor;
+    MENU_INFO rec;
+    MENU_INFO arch;
+    MENU_INFO search;
+    MENU_INFO del;
+    MENU_INFO userguide;
+} MENU_CF;
+
+extern MENU_CF mcf;
+
+gint vw_menu_get_str_sys_menu_sub1(gchar **menu);
+gint vw_menu_get_str_sys_menu_sub2(gchar **menu);
+gint vw_menu_get_str_sys_menu_sub3(gchar **menu);
+gint vw_menu_get_str_sys_menu_sub4(gchar **menu);
+gint vw_menu_get_str_sys_menu_sub5(gchar **menu);
+gint vw_menu_get_str_sys_menu_sub6(gchar **menu);
+gint vw_menu_get_str_sys_menu_sub7(gchar **menu);
+gint vw_menu_get_str_sys_menu_sub8(gchar **menu);
+gint vw_menu_get_str_sys_menu_event_noti(gchar **menu);
+gint vw_menu_get_str_sys_menu_alarm_sensor_evt(gchar **menu);
+gint vw_menu_get_str_rec_menu(gchar **menu);
+gint vw_menu_get_str_arch_menu(gchar **menu);
+gint vw_menu_get_str_search_menu(gchar **menu);
+gint vw_menu_get_str_delete_menu(gchar **menu);
+gint vw_menu_get_str_userguide_menu(gchar **menu);
+
+#endif
+

@@ -1,0 +1,191 @@
+/*
+ * vw_dvabx_rule_area.c
+ *
+ * Written by JungKyu. <parangi22@itxsecurity.com>
+ * Copyright (c) ITX security, Feb 15, 2019
+ *
+ */
+
+#include <glib.h>
+#include "iux_afx.h"
+
+#include "support/event_loop.h"
+#include "support/nf_ui_font.h"
+#include "support/nf_ui_image.h"
+#include "support/nf_ui_page_manager.h"
+#include "support/nf_ui_color.h"
+#include "support/util.h"
+
+#include "tools/nf_ui_tool.h"
+
+#include "modules/ssm.h"
+#include "modules/smt.h"
+#include "modules/var.h"
+
+#include "objects/nfobject.h"
+#include "objects/nfwindow.h"
+#include "objects/nffixed.h"
+#include "objects/nfbutton.h"
+#include "objects/nfimage.h"
+#include "objects/nflabel.h"
+#include "objects/nfvklabel.h"
+#include "objects/nftab.h"
+#include "objects/nfcheckbutton.h"
+
+#include "vw_dvabx_prop_internal.h"
+
+
+
+
+////////////////////////////////////////////////////////////
+//
+// private data types
+//
+
+
+
+
+
+////////////////////////////////////////////////////////////
+//
+// private variable
+//
+static NFOBJECT *g_curwnd = NULL;
+static NFOBJECT *g_fixed = NULL;
+static NFOBJECT *g_parent = NULL;
+
+
+
+
+
+////////////////////////////////////////////////////////////
+//
+// private interfaces 
+//
+
+
+
+
+
+////////////////////////////////////////////////////////////
+//
+// handler
+//
+static gboolean post_fixed_event_handler(NFOBJECT *obj, GdkEvent *evt, gpointer data)
+{
+	switch(evt->type) {
+		case GDK_EXPOSE:
+			break;
+
+		case GDK_DELETE:
+			g_curwnd = 0;
+			break;
+
+		default:
+			break;
+	}
+
+	return FALSE;
+}
+
+static gboolean post_cancelbutton_event_handler(NFOBJECT *obj, GdkEvent *evt, gpointer data)
+{
+	if(evt->type == GDK_BUTTON_RELEASE)
+	{
+		if(evt->button.button == MOUSE_RIGTH_BUTTON) 
+			return FALSE;
+ 	}
+
+	return FALSE;
+}
+
+static gboolean post_addbutton_event_handler(NFOBJECT *obj, GdkEvent *evt, gpointer data)
+{
+	if(evt->type == GDK_BUTTON_RELEASE)
+	{		
+		if (evt->button.button == MOUSE_RIGTH_BUTTON) 
+		    return FALSE;
+	}
+
+	return FALSE;
+}
+
+static gboolean post_okbutton_event_handler(NFOBJECT *obj, GdkEvent *evt, gpointer data)
+{
+	if(evt->type == GDK_BUTTON_RELEASE)
+	{
+		if(evt->button.button == MOUSE_RIGTH_BUTTON) 					
+			return FALSE;
+	    _dvabx_rule_line(g_parent);
+	    _dvabx_rule_area_hide(g_fixed);
+	}
+
+	return FALSE;
+}
+
+
+
+
+////////////////////////////////////////////////////////////
+//
+// protected interfaces 
+//
+
+gint _dvabx_rule_area(NFOBJECT *parent)
+{
+    NFOBJECT *fixed;
+    NFOBJECT *obj;
+	NFOBJECT *btn_cancel;
+    NFOBJECT *btn_add;
+	NFOBJECT *btn_ok;
+
+    g_parent = parent;
+	g_curwnd = (NFWINDOW *)nfui_nfobject_get_top(g_parent);
+
+	fixed = (NFOBJECT*)nfui_nffixed_new();
+	nfui_nfobject_modify_bg(fixed, NFOBJECT_STATE_NORMAL, COLOR_IDX(404));
+	nfui_nfobject_set_size(fixed, g_parent->width, g_parent->height - (DVABX_BTN_H + DVABX_BTN_GAP));
+	nfui_nfobject_show(fixed);
+	nfui_nffixed_put((NFFIXED*)g_parent, fixed, 0, 0);
+	nfui_regi_pre_event_callback(fixed, post_fixed_event_handler);
+	g_fixed = fixed;
+
+	obj = (NFOBJECT*)nftool_normal_button_create_subtab_type1("CANCEL", DVABX_BTN_W);
+	nfui_nfbutton_set_font_alignment(NF_BUTTON(obj), NFALIGN_CENTER, 0);	
+	nfui_regi_post_event_callback(obj, post_cancelbutton_event_handler);
+	nfui_nfobject_show(obj);
+	nfui_nffixed_put((NFFIXED*)g_parent, obj, DVABX_WIDTH_GAP, DVABX_BTN1_Y);
+	btn_cancel = obj;
+
+	obj = (NFOBJECT*)nftool_normal_button_create_subtab_type1("ADD RULE", DVABX_BTN_W);
+	nfui_nfbutton_set_font_alignment(NF_BUTTON(obj), NFALIGN_CENTER, 0);	
+	nfui_regi_post_event_callback(obj, post_addbutton_event_handler);
+	nfui_nfobject_show(obj);
+	nfui_nffixed_put((NFFIXED*)g_parent, obj, DVABX_BTN1_X, DVABX_BTN1_Y);
+	btn_add = obj;
+
+	obj = (NFOBJECT*)nftool_normal_button_create_subtab_type1("OK", DVABX_BTN_W);
+	nfui_nfbutton_set_font_alignment(NF_BUTTON(obj), NFALIGN_CENTER, 0);	
+	nfui_regi_post_event_callback(obj, post_okbutton_event_handler);
+	nfui_nfobject_show(obj);
+	nfui_nffixed_put((NFFIXED*)g_parent, obj, DVABX_BTN_X, DVABX_BTN1_Y);
+	btn_ok = obj;
+
+    return 0;
+}
+
+void _dvabx_rule_area_show(NFOBJECT *parent)
+{
+    nfui_nfobject_show(parent);
+}
+
+void _dvabx_rule_area_hide(NFOBJECT *parent)
+{
+	NFOBJECT *topwin;
+
+	topwin = nfui_nfobject_get_top(parent);
+	
+	nfui_nfobject_hide(topwin);
+
+}
+

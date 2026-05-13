@@ -1,0 +1,36 @@
+#ifndef __WEBRA_API_VALID_H__
+#define __WEBRA_API_VALID_H__
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef enum _WEBRA_API_VALID_TYPE_E {
+  WEBRA_VALID_START = -1,
+
+  // VALIDATION
+  WEBRA_VALID_NONE = 0,
+  WEBRA_VALID_ONOFF,
+  WEBRA_VALID_ID,
+  WEBRA_VALID_PASSWORD,
+  WEBRA_VALID_IPv4,
+  WEBRA_VALID_MAC_ADDRESS,
+  WEBRA_VALID_PORT,
+  WEBRA_VALID_URL,
+  WEBRA_VAILD_EMAIL,
+  WEBRA_VALID_LANGUAGE,
+  WEBRA_VALID_SYSDB_CATEGORY,
+  // add validation mothod here
+  WEBRA_VALID_NR,
+} WEBRA_API_VALID_TYPE;
+
+typedef enum _WEBRA_API_VALID_ERROR_CODE_E {
+  WEBRA_VALID_ERROR_NONE = 0, // success
+  WEBRA_VALID_ERROR_EMPTY,
+  WEBRA_VALID_ERROR_ARG_TYPE,
+  WEBRA_VALID_ERROR_OUT_OF_BOUND,
+  WEBRA_VALID_ERROR_VALIDATION,
+  WEBRA_VALID_ERROR_GVALUE,
+  WEBRA_VALID_ERROR_NR
+} WEBRA_API_VALID_ERROR_CODE;
+////////////////////////////////////////////////////////////////////////////////
+
+#endif //__WEBRA_API_VALID_H__
