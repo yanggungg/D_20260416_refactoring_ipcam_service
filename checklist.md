@@ -7,9 +7,10 @@
 ## Phase 0 — 안전망
 
 - [x] **롤백 매체 합의 + GitHub repo 연결**: `main` 브랜치, `src/+include/+.md` 추적. 베이스라인 commit `06eacfc`, `cffa389`. (완료 2026-05-13)
-- [ ] **외부 API 시그니처 인벤토리**: IPCAM 공개 API의 실제 헤더 위치 식별(메모리상 `include/nf_api_ipcam.h`인데 실제 include/엔 없음 — 어디 있는지 재탐색) + 공개 함수 목록 + 외부 호출자 매핑 표 작성
-- [ ] **베이스라인 메트릭 측정**: phase 끝마다 비교할 정량 지표(파일 크기, 라인 수, 함수 수, 포함 그래프). `src/service/` 4개 큰 파일과 헤더 의존성.
-- [ ] **모드 플래그 직접/간접 참조 파일 목록 확정**: grep으로 `is_custom_mode`, `is_open_mode`, `nf_get_*_mode`, `cam.install.mode`, `cam.install.dual_lan` 정확 위치 표기. Phase 1 변경 범위 매핑.
+- [x] **외부 API 헤더 위치 재탐색**: 실제 위치 `src/include/` (메모리 보정 완료). 상세 `docs/phase0_inventory.md` 1절. (완료 2026-05-13)
+- [x] **베이스라인 메트릭 측정**: 1차 타겟 4파일 = 29,110줄 / 893KB / 456함수 / 440 static. 단일 최대 `nf_ipcam_models.c` 27,422줄. 상세 `docs/phase0_inventory.md` 3절. (완료 2026-05-13)
+- [x] **모드 플래그 참조 파일 목록 확정**: 고유 16파일 (접근자 7 + sysdb 12 - 중복 3). 상세 `docs/phase0_inventory.md` 2절. (완료 2026-05-13)
+- [ ] **외부 API 시그니처 인벤토리(공개 함수 목록 + 외부 호출자 매핑)**: 헤더 위치는 확정. `nf_api_ipcam.h`/`nf_api_openmode.h`의 공개 함수 목록 + `#include` 호출자 매핑 표 작성(별도 단계).
 - [ ] **빌드 절차 문서화**: 개발서버 접속 → 빌드 명령 → 결과 확인 + 빌드 변형(`_IPX_32P5` / `ENABLE_PROJECT_KMW` / `USE_PND` 등 매크로) 중 검증 대상 N개 합의.
 - [ ] **수동 검증 시나리오 정의**: CCTV 모드 카메라 연결 / OPEN 모드 카메라 연결 / 듀얼랜 모드 전환 / 디스커버리 1회 / 펌업·이벤트 수신 1회. 각각 통과/실패 판정 기준 명문화. 1회 수행 소요 시간 견적.
 - [ ] **테스트 셋업 합의**: 회귀 시나리오를 돌릴 최소 장비/카메라 셋업(자사 1대 + 외부 1대 등)과 sysdb 초기 상태.

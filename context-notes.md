@@ -75,4 +75,16 @@
 
 ---
 
+## 8. Phase 0 자동 탐색 결과 반영 (2026-05-13)
+
+`docs/phase0_inventory.md` 작성. 핵심 보정:
+
+- **외부 API 헤더 경로**: 메모리상 `include/nf_api_ipcam.h` → **실제 `src/include/nf_api_ipcam.h`**. 모든 `nf_api_*.h` 공개 헤더가 `src/include/`에 있음. 이후 phase 결정 시 이 경로 기준.
+- **모드 플래그 참조 16 파일 확정**: 메모리 "약 18" → 실측 16. 분포: service 6 / sysman 5 / nfdal 1 / extension 1 / nf_main 1.
+- **1차 타겟 4 파일 실측**: 29,110줄 (메모리 33K+ 보다 작음). 측정 방식 차이로 보임. 정량 비교 기준은 본 실측치.
+- **Phase 3 시야 확대 필요**: `nf_ipcam_models.c`(27,422줄)와 `nf_ipcam_driver_itx.c`(23,961줄)가 1차 타겟 외였지만 합쳐 51K줄. 도메인 split 시 함께 검토.
+- **`nf_api_openmode.c`의 static 270개**가 비정상적으로 많음 → 모드 정리 후 내부 상태 캐시/헬퍼 응집 재검토 필요.
+
+---
+
 (이하 phase 진행에 따라 결정 추가)
