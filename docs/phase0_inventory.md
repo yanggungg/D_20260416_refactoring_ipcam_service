@@ -158,7 +158,51 @@
 
 ---
 
-## 5. 본 인벤토리가 phase 결정에 미치는 영향
+## 5. 빌드 환경
+
+### 5.1 빌드 명령(2026-05-13 합의)
+
+- **풀 빌드(처음/설정 변경 후)**: 개발서버에서 `src/make_host.sh` 실행. 대화형으로 모델/벤더/옵션 선택. 인자 모드(`PACKAGING ...`)로 비대화형 호출도 가능.
+- **소스만 변경된 경우**: `src/` 에서 `make`만 실행. 증분 빌드.
+- 내부 호출 흐름: `make_host.sh` → 선택 정보를 `MODEL_TYPE0/CH/VENDOR_TYPE/OPTION_TYPE/NABTO_TYPE`으로 변환 → `./rose_make_host.sh` 호출 → 실제 빌드.
+- 빌드 결과물: `nf_host` (메인 실행) + `webra.made` (UI). 둘 다 `src/`에서 생성, `nf_host`는 자동으로 작업 폴더 루트로 cp 됨(`src/Makefile:471`).
+
+### 5.2 검증 빌드 변형(2026-05-13 합의)
+
+- **단일 변형**: `_IPX_32P5 + VIDECON + VA + NABTO` (= `make_host.sh` 기본 선택지 1/28/2/2 = `src/make.env`의 현재 설정).
+- 다른 모델/벤더 변형은 본 리팩토링 범위 밖. 필요 시 별도 검증.
+- → phase별 "빌드 통과 기준" = **이 단일 변형으로 `make` 또는 `make_host.sh`가 에러 없이 완료**.
+
+### 5.3 매크로 의존 깊이(참고)
+
+`#if(def|ndef)? ...` 내 매크로 토큰 분포 (top 토큰, src/ 전체):
+
+| 매크로 | 카운트 | 성격 |
+|---|---|---|
+| `PRINT_HTTP_API_SEND` | 384 | 디버그 출력 |
+| `LIVE_PRINT_16CH` | 124 | 디버그 출력 |
+| `MRTPSRC_USE_STATISTICS` | 70 | 통계 옵션 |
+| `DEBUG_ACTION_LOG` | 64 | 디버그 |
+| `DEBUG_NETSVR_LOG` | 62 | 디버그 |
+| `MAKE_NOTIFY_FIRE` | 59 | 알림 |
+| `DUAL_LAN_NETWORK` | 58 | 모드 |
+| `GUI_8CH_SUPPORT` / `GUI_4CH_SUPPORT` / `GUI_16CH_SUPPORT` | 42 / 39 / 29 | 모델 변형 |
+| `USE_PROXY_SYSTEM` | 38 | 기능 토글 |
+| `SUPPORT_VCA_CAMERA` | 38 | 기능 토글 |
+| `IPCAM_UNIT_TEST` | 47 | 테스트 |
+
+→ 메모리에 적힌 `_IPX_32P5`, `ENABLE_PROJECT_KMW`, `USE_PND`는 **개별 모델 선택자**일 뿐, 코드 분기의 핫스팟은 디버그 출력·UI 채널 수·기능 토글. 매크로 의존 축소(Phase 7)는 단순히 모델 매크로만 줄여선 효과 작음 — 기능 토글까지 데이터화해야 의미 있음.
+
+### 5.4 Makefile.Rules 모델 변형(앞부분 200줄 관찰)
+
+`src/Makefile.Rules` 65KB. 시작부에서 확인된 분기:
+- `_IPX_32P5` (현재 선택, 본문 기본부)
+- `_SNF_1648`, `_SNF_0824`, `_SNF_0424`, `_IPX_1648P`
+- 65KB 안에 더 많은 변형이 존재할 가능성. 본 리팩토링은 `_IPX_32P5`만 보존하므로 다른 분기 코드 변경은 검증 밖.
+
+---
+
+## 6. 본 인벤토리가 phase 결정에 미치는 영향
 
 1. **외부 API 헤더 위치 보정** — 메모리/이후 문서에서 `include/` → `src/include/`. 외부 호출자 검사 시 `#include "nf_api_ipcam.h"` 또는 `nf_api_openmode.h` 패턴 기반.
 2. **Phase 1 변경 범위 = 16 파일** 확정. 도메인별 분포: service 6 / sysman 5 / nfdal 1 / extension 1 / 루트 1 / 그 외(discovery, onvif 등).

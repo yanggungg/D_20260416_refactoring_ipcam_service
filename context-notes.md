@@ -86,6 +86,13 @@
 - **`nf_api_openmode.c`의 static 270개**가 비정상적으로 많음 → 모드 정리 후 내부 상태 캐시/헬퍼 응집 재검토 필요.
 - **공개 API 표면 확장 발견**: `nf_api_ipcam.h` 호출자 109 파일 — 메모리 "18+"는 모드 플래그 기준이었음. 시그니처 보존이 깨지면 UI(nfgui 59)부터 무너짐. Phase별 빌드 검증 1차 대상에 nfgui 포함 필수.
 
+## 9. 빌드 환경 합의(2026-05-13)
+
+- **빌드 명령**: 풀 빌드 `src/make_host.sh`(대화형), 증분 빌드 `src/make`. 둘 다 개발서버에서 실행.
+- **검증 변형**: `_IPX_32P5 + VIDECON + VA + NABTO` 단일. 다른 모델/벤더 변형은 본 리팩토링 검증 밖.
+- **결과물**: `nf_host`(메인), `webra.made`(UI). `nf_host`는 빌드 후 작업 폴더 루트로 자동 cp.
+- **매크로 의존 인사이트**: 코드 분기 핫스팟은 모델 매크로(`_IPX_32P5` 등)가 아니라 디버그 출력(`PRINT_HTTP_API_SEND` 384회), UI 채널 수(`GUI_*CH_SUPPORT`), 기능 토글(`USE_PROXY_SYSTEM`, `SUPPORT_VCA_CAMERA`)에 있음. → Phase 7 "런타임 capability"는 단순 모델 매크로 제거가 아니라 기능 토글까지 데이터 기반화해야 의미.
+
 ---
 
 (이하 phase 진행에 따라 결정 추가)
