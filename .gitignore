@@ -17,6 +17,10 @@
 *.lo
 *.d
 
+# 2a) src/ 내 빌드된 실행 파일/임시 파일 (확장자 없음)
+/src/nf_host
+/src/tmp
+
 # 3) 임시/백업
 *.tmp
 *.bak
