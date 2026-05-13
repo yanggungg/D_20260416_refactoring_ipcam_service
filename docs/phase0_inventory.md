@@ -122,7 +122,43 @@
 
 ---
 
-## 4. 본 인벤토리가 phase 결정에 미치는 영향
+## 4. 공개 API 시그니처 인벤토리(개략)
+
+정확한 함수 prototype 추출은 Phase 1 진입 직전 별도 산출물(`docs/phase1_api_signatures.md`)에서 수행. 본 절은 표면적 크기와 호출자 분포의 개략 수치.
+
+### 4.1 `nf_api_ipcam.h` (IPCAM 공통 API)
+
+- 크기: **2,496줄 / 97 KB** — 헤더 자체가 거대. Phase 3·4 시 헤더 분할 후보.
+- prototype 개략 카운트: **~100개** (정규식 추정; 정확치는 후속 추출).
+- **Includer 109 파일** 분포:
+
+| 디렉토리 | 파일 수 | 비고 |
+|---|---|---|
+| `src/nfgui/` | **59** | UI(viewers + services). 가장 큰 호출자. 시그니처 변경 시 영향 1순위 |
+| `src/service/` | 36 | 백엔드 동료 서비스 |
+| `src/extension/` | 6 | ONVIF/NVS 등 외부 인터페이스 |
+| `src/sysman/` | 5 | 시스템 관리 |
+| `src/include/` | 2 | 헤더 → 헤더 전이 의존 |
+| `src/nf_main.c` | 1 | 최상위 |
+
+> 메모리에 적힌 "18+ 외부 호출자"는 모드 플래그 기준이었음. 실제 IPCAM API 표면 호출자는 6배. **시그니처 보존 원칙이 결정적으로 중요한 이유.**
+
+### 4.2 `nf_api_openmode.h` (OPEN 모드 API)
+
+- 크기: **210줄 / 6.5 KB**.
+- prototype 개략: **~34개**.
+- **Includer 19 파일** 분포: service 10 / nfgui 9.
+
+→ OPEN 모드 API 표면은 IPCAM 공통 대비 좁음. Phase 2(enum 도입) 시 OPEN 측 정리 부담이 IPCAM 본체보다 가벼울 가능성.
+
+### 4.3 함의
+
+- Phase 1·2의 안전 기준 = "이 109 파일 + 19 파일을 빌드해도 시그니처 불일치 없음" + "수동 시나리오 통과".
+- **시그니처 보존이 깨지면 UI(59 파일)부터 무너짐** — phase별 빌드 검증 1차 대상에 nfgui 포함 필수.
+
+---
+
+## 5. 본 인벤토리가 phase 결정에 미치는 영향
 
 1. **외부 API 헤더 위치 보정** — 메모리/이후 문서에서 `include/` → `src/include/`. 외부 호출자 검사 시 `#include "nf_api_ipcam.h"` 또는 `nf_api_openmode.h` 패턴 기반.
 2. **Phase 1 변경 범위 = 16 파일** 확정. 도메인별 분포: service 6 / sysman 5 / nfdal 1 / extension 1 / 루트 1 / 그 외(discovery, onvif 등).
