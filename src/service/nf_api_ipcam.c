@@ -416,6 +416,15 @@ gboolean nf_get_custom_mode(void)
 }
 
 /**
+ * @brief 현재 듀얼랜(dual_lan) 모드 상태를 조회한다.
+ * @return 0 - 단일랜, 1 - 듀얼랜(외부망 + 내부 PoE).
+ */
+gboolean nf_get_dual_lan_mode(void)
+{
+	return is_custom_mode;
+}
+
+/**
  * @brief 현재 CCTV/OPEN모드 상태를 조회한다.
  * @return 0 - CCTV, 1 - OPEN모드.
  */
