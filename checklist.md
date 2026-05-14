@@ -22,7 +22,7 @@
 
 범위 합의(2026-05-14): **단순 rename만**. 정적 캐시/sysdb 직접 호출 등 단일 진실 출처화는 본 phase 밖. is_open_mode 측은 Phase 1.5로 분리.
 
-- [ ] **1.0 시그니처 인벤토리**: `nf_get_custom_mode()`의 정의 위치(공개 헤더 `nf_api_ipcam.h` 안인지 내부인지), 시그니처, 외부 호출자 — `docs/phase1_api_signatures.md`로 정밀 매핑. **이 결과가 1.1 형태와 1.4 제거 방식을 결정**.
+- [x] **1.0 시그니처 인벤토리**: 정의 `nf_api_ipcam.c:413` 단일. 내부 함수(공개 헤더 없음). 호출자 18 라인 / 6 파일, 모두 if-조건 또는 단순 대입. Prototype 부재 → implicit declaration. 상세 `docs/phase1_api_signatures.md`. (완료 2026-05-14)
 - [ ] **1.1 새 접근자 추가**: `nf_get_dual_lan_mode()` 정의 + 헤더 노출. 본문은 기존 `nf_get_custom_mode()` 호출 또는 동일 로직 복제(1.0 결과에 따름). 외부 시그니처 보존.
 - [ ] **1.2 호출자 일괄 교체**: `nf_get_custom_mode()` → `nf_get_dual_lan_mode()` (7 파일 29회). 의미 단위 1 commit (디렉토리 분할은 1.0 결과 보고 결정).
 - [ ] **1.3 정적 변수 rename**: `is_custom_mode` → `is_dual_lan` (정의/할당/참조 일괄). 파일 내 file-scope static이라 단일 파일 변경.

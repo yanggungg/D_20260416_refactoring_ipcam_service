@@ -124,6 +124,17 @@
 - **시나리오 보정**: Phase 1 회귀는 **시나리오 A(듀얼랜 ON/OFF) + C(라이브 영상)** 두 가지. 메모리상 "CCTV 전환"은 32CH에서 실행 불가.
 - **commit 단위**: 1.2 호출자 일괄 교체는 의미 단위 1 commit 기본. 디렉토리 분할은 1.0 결과 보고 결정(7 파일이 너무 크면 service/sysman/nf_main 3 commit).
 
+## 14. Phase 1.0 결과(2026-05-14)
+
+- 정의: `src/service/nf_api_ipcam.c:413` 단일. 시그니처 `gboolean nf_get_custom_mode(void)`.
+- 정적 변수 `is_custom_mode` 4위치(`nf_api_ipcam.c` 71/79/405/415) — 단일 파일.
+- **공개 API 아님**: `src/include/` 어느 헤더에도 prototype 없음. 외부 109 호출자 영향 0.
+- **호출자 18라인 / 6 파일**: 모두 `if(!?nf_get_custom_mode())` 또는 단순 대입. 인자 변환 없음.
+- **Prototype 부재** = C implicit declaration. 호출자에 일관 warning 가능성. → 1.1 시 prototype 위치 결정 필요(별도 합의 진행).
+- **결정적 신호**: `nf_util_netif.c:320, 477`의 호출자 주석이 `//nf_sysdb_get_bool("cam.install.dual_lan");` — 코드베이스 내에서 이미 함수의 실체가 dual_lan임을 알고 있음. rename은 잠재 의도의 표면화.
+- 1 commit 단위 적정성: 18라인/6파일 작은 규모. 의미 단위 1 commit으로 충분.
+- 1.4 구형 제거: 공개 API 아니므로 **즉시 제거 가능**(deprecation alias 불필요).
+
 ---
 
 (이하 phase 진행에 따라 결정 추가)
