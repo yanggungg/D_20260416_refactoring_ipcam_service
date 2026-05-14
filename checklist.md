@@ -18,17 +18,29 @@
 
 > **Phase 0 종결.** 안전망 9/9, GitHub 베이스라인 7 commits 푸시 완료. Phase 1 진입 가능.
 
-## Phase 1 — 명명 부채 정리
+## Phase 1 — dual_lan 측 명명 부채 정리(단순 rename)
 
-세부 작업은 phase 0 완료 후 commit 단위로 구체화. 임시 윤곽:
+범위 합의(2026-05-14): **단순 rename만**. 정적 캐시/sysdb 직접 호출 등 단일 진실 출처화는 본 phase 밖. is_open_mode 측은 Phase 1.5로 분리.
 
-- [ ] 1.1 접근자 추가: `nf_get_dual_lan_mode()` 새 함수 정의(기존 `nf_get_custom_mode()` 래핑) + 헤더 노출
-- [ ] 1.2 호출자 교체: `nf_get_custom_mode()` 호출 → `nf_get_dual_lan_mode()` (파일 단위로 작은 commit)
-- [ ] 1.3 직접 sysdb 호출(`cam.install.dual_lan` 검사 코드) → 접근자 사용으로 단일화
-- [ ] 1.4 정적 변수 캐시 정리: `is_custom_mode` 변수명 → `is_dual_lan` (정의/할당/참조 일괄)
-- [ ] 1.5 구형 접근자 `nf_get_custom_mode()` 제거 + 외부 헤더 정리
-- [ ] 1.6 동일하게 `is_open_mode` 측 정리(필요 시 `nf_get_install_mode()` 단일 진실 출처화 — 합의 후)
-- [ ] Phase 1 완료 — 빌드 통과 + 수동 회귀 체크 (CCTV/OPEN/듀얼랜 전환)
+- [ ] **1.0 시그니처 인벤토리**: `nf_get_custom_mode()`의 정의 위치(공개 헤더 `nf_api_ipcam.h` 안인지 내부인지), 시그니처, 외부 호출자 — `docs/phase1_api_signatures.md`로 정밀 매핑. **이 결과가 1.1 형태와 1.4 제거 방식을 결정**.
+- [ ] **1.1 새 접근자 추가**: `nf_get_dual_lan_mode()` 정의 + 헤더 노출. 본문은 기존 `nf_get_custom_mode()` 호출 또는 동일 로직 복제(1.0 결과에 따름). 외부 시그니처 보존.
+- [ ] **1.2 호출자 일괄 교체**: `nf_get_custom_mode()` → `nf_get_dual_lan_mode()` (7 파일 29회). 의미 단위 1 commit (디렉토리 분할은 1.0 결과 보고 결정).
+- [ ] **1.3 정적 변수 rename**: `is_custom_mode` → `is_dual_lan` (정의/할당/참조 일괄). 파일 내 file-scope static이라 단일 파일 변경.
+- [ ] **1.4 구형 접근자 제거 또는 deprecation alias**: `nf_get_custom_mode()`가 공개 API면 alias로 유지 + 주석 deprecation, 내부면 즉시 제거. 1.0 결과로 결정.
+- [ ] **Phase 1 완료** — 빌드 통과(`make`) + **시나리오 A 듀얼랜 ON/OFF + C 라이브 영상**(32CH 실효 범위).
+
+## Phase 1.5 — install_mode 측 명명 부채 정리
+
+Phase 1 완료/회귀 통과 후 진입. 구조는 Phase 1과 동일 패턴.
+
+- [ ] 1.5.0 시그니처 인벤토리: `is_open_mode` 정적 변수 위치 + 접근자(있다면) + sysdb 직접 호출(`cam.install.mode`) 분포 정밀 매핑.
+- [ ] 1.5.1 접근자 도입/정리: `nf_get_install_mode()` 존재 여부 확인. 없으면 신설, 있으면 명명 검토.
+- [ ] 1.5.2 호출자 교체 (필요 시).
+- [ ] 1.5.3 정적 변수 정리(이름 변경 대상이 있다면).
+- [ ] 1.5.4 구형 접근자 정리.
+- [ ] Phase 1.5 완료 — 빌드 + 시나리오 A·C.
+
+> Phase 1.5의 세부는 1.5.0 시그니처 인벤토리 결과를 보고 구체화.
 
 ## Phase 2 — 모드 enum 도입
 

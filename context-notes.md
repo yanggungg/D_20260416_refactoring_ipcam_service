@@ -113,6 +113,17 @@
 - Phase 0 항목 9/9 완료. GitHub `main` 브랜치 baseline 7 commits 푸시 완료.
 - 다음: Phase 1(`is_custom_mode` → `is_dual_lan` rename + 모드 접근자 단일화) 진입 합의 대기.
 
+## 13. Phase 1 세부 합의(2026-05-14)
+
+사용자 결정으로 Phase 1 형태가 정해짐.
+
+- **범위 = A. 단순 rename만**: 정적 캐시/sysdb 직접 호출 등 3경로 단일화는 본 phase 밖. 동작 보존 우선.
+- **is_open_mode 측 정리는 Phase 1.5로 분리**: Phase 1 완료/회귀 통과 후. 변경 범위 2배 방지, 회귀 원인 분리 용이.
+- **단일 진실 출처화(B 안)는 미정**: Phase 2 진입 시 재합의 대상. 일단 phase plan 밖.
+- **Phase 1.0 시그니처 인벤토리 추가**: `nf_get_custom_mode()`가 공개 API(`nf_api_ipcam.h`)인지 내부인지에 따라 1.1·1.4 형태 달라짐. 인벤토리 결과를 토대로 다음 단계 형태 결정.
+- **시나리오 보정**: Phase 1 회귀는 **시나리오 A(듀얼랜 ON/OFF) + C(라이브 영상)** 두 가지. 메모리상 "CCTV 전환"은 32CH에서 실행 불가.
+- **commit 단위**: 1.2 호출자 일괄 교체는 의미 단위 1 commit 기본. 디렉토리 분할은 1.0 결과 보고 결정(7 파일이 너무 크면 service/sysman/nf_main 3 commit).
+
 ---
 
 (이하 phase 진행에 따라 결정 추가)
