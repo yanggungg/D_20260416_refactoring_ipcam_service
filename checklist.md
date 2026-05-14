@@ -14,7 +14,9 @@
 - [x] **빌드 절차 + 변형 합의**: 풀 빌드 `src/make_host.sh`, 증분 빌드 `src/make`. 검증 변형 = `_IPX_32P5 + VIDECON + VA + NABTO` 단일. 상세 `docs/phase0_inventory.md` 5절. (완료 2026-05-13)
 - [x] **수동 검증 시나리오 정의**: 32CH 실효 범위 기준 4종 — A 듀얼랜 ON/OFF, B 디스커버리, C 라이브 영상, D 재연결. phase별 필수/선택 분배. 상세 `docs/phase0_inventory.md` 6절. (완료 2026-05-13)
 - [x] **테스트 셋업 합의**: 자사 N대(PoE) + 외부 1대. CCTV 모드는 32CH 변형에서 미지원. 상세 `docs/phase0_inventory.md` 6.1절. (완료 2026-05-13)
-- [ ] **Phase 0 완료 — 베이스라인 빌드 1회 통과 확인**: 사용자가 개발서버에서 `src/make_host.sh` 또는 `make`로 현재 베이스라인이 에러 없이 빌드되는지 확인. 산출물/로그 보존 권장. **(사용자 액션 필요)**
+- [x] **Phase 0 완료 — 베이스라인 빌드 1회 통과 확인**: 사용자가 개발서버에서 `make_host.sh`로 빌드 통과 확인. trunk_32 사본 + .gitignore 추가만 있는 베이스라인 상태가 빌드 가능함을 검증. (완료 2026-05-14)
+
+> **Phase 0 종결.** 안전망 9/9, GitHub 베이스라인 7 commits 푸시 완료. Phase 1 진입 가능.
 
 ## Phase 1 — 명명 부채 정리
 

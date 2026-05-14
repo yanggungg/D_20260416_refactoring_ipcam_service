@@ -107,6 +107,12 @@
 - 정밀 임계값(시간/개수)은 phase 진행 중 보정. 본 시점은 수행 단계 + 통과 신호 초안만 합의.
 - 한 phase 검증 부담 추정 10-20분.
 
+## 12. Phase 0 종결(2026-05-14)
+
+- 베이스라인 빌드(`make_host.sh`, _IPX_32P5 + VIDECON + VA + NABTO) 통과 확인. trunk_32 사본 + .gitignore 추가만 있는 상태가 정상 빌드됨을 검증.
+- Phase 0 항목 9/9 완료. GitHub `main` 브랜치 baseline 7 commits 푸시 완료.
+- 다음: Phase 1(`is_custom_mode` → `is_dual_lan` rename + 모드 접근자 단일화) 진입 합의 대기.
+
 ---
 
 (이하 phase 진행에 따라 결정 추가)
