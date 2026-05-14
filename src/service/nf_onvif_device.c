@@ -2227,7 +2227,7 @@ ONVIF_MSG _nf_onvif_dev_system_reboot(
 	}
 
 #ifdef DUAL_LAN_NETWORK
-	if(!nf_get_custom_mode())
+	if(!nf_get_dual_lan_mode())
 	{
 		if(interface > 0 && nf_get_running_mode() == 0)
 		{
@@ -2369,7 +2369,7 @@ ONVIF_MSG _nf_onvif_dev_get_network_interfaces_token(
 	}
 
 #ifdef DUAL_LAN_NETWORK
-	if(!nf_get_custom_mode())
+	if(!nf_get_dual_lan_mode())
 	{
 		if(interface > 0 && nf_get_running_mode() == 0)
 		{
@@ -2552,7 +2552,7 @@ ONVIF_MSG _nf_onvif_dev_set_network_dhcp
 	}
 
 #ifdef DUAL_LAN_NETWORK
-	if(!nf_get_custom_mode())
+	if(!nf_get_dual_lan_mode())
 	{
 		if(interface > 0 && nf_get_running_mode() == 0)
 		{
@@ -2998,7 +2998,7 @@ ONVIF_MSG _nf_onvif_dev_get_device_info(
 	}
 
 #ifdef DUAL_LAN_NETWORK
-	if(!nf_get_custom_mode())
+	if(!nf_get_dual_lan_mode())
 	{
 		if(interface > 0 && nf_get_running_mode() == 0)
 		{

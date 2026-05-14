@@ -262,7 +262,7 @@ static void nf_ipcam_dhcpd(void)
 
 		tran.my_ip = get_host_info();
 #ifdef DUAL_LAN_NETWORK
-if(!nf_get_custom_mode())
+if(!nf_get_dual_lan_mode())
 {
 		if(port_hub >= 0)
 			tran.my_ip = get_hub_info();
@@ -563,7 +563,7 @@ static void send_offer(int eth)
 	p_int = (void*)p;
 	*p_int = get_netif_ip(LOCAL_ETH_DEVICE)&get_netif_mask(LOCAL_ETH_DEVICE) | 0x01000000;	//   host router address
 #ifdef DUAL_LAN_NETWORK
-if(!nf_get_custom_mode())
+if(!nf_get_dual_lan_mode())
 {
 	if(eth >= 0)
 		*p_int = get_netif_ip(HUB_ETH_DEVICE)&get_netif_mask(HUB_ETH_DEVICE) | 0x01000000;	//   host router address
@@ -595,7 +595,7 @@ if(!nf_get_custom_mode())
 	sll.sll_protocol = htons(ETH_P_IP);
 	sll.sll_ifindex  = if_nametoindex(LOCAL_ETH_DEVICE); // index of hub_eth
 #ifdef DUAL_LAN_NETWORK
-if(!nf_get_custom_mode())
+if(!nf_get_dual_lan_mode())
 {
 	if(eth >= 0)
 		sll.sll_ifindex  = if_nametoindex(HUB_ETH_DEVICE); // index of hub_eth
@@ -746,7 +746,7 @@ static void send_nack(int eth)
 	sll.sll_protocol = htons(ETH_P_IP);
 	sll.sll_ifindex  = if_nametoindex(LOCAL_ETH_DEVICE); // index of hub_eth
 #ifdef DUAL_LAN_NETWORK
-if(!nf_get_custom_mode())
+if(!nf_get_dual_lan_mode())
 {
 	if(eth >= 0)
 		sll.sll_ifindex  = if_nametoindex(HUB_ETH_DEVICE); // index of hub_eth
@@ -903,7 +903,7 @@ static void send_ack(int eth)
 	p_int = (void*)p;
 	*p_int = get_netif_ip(LOCAL_ETH_DEVICE)&get_netif_mask(LOCAL_ETH_DEVICE) | 0x01000000;	//   host router address
 #ifdef DUAL_LAN_NETWORK
-if(!nf_get_custom_mode())
+if(!nf_get_dual_lan_mode())
 {
 	if(eth >= 0)
 		*p_int = get_netif_ip(HUB_ETH_DEVICE)&get_netif_mask(HUB_ETH_DEVICE) | 0x01000000;	//   host router address
@@ -934,7 +934,7 @@ if(!nf_get_custom_mode())
 	sll.sll_protocol = htons(ETH_P_IP);
 	sll.sll_ifindex  = if_nametoindex(LOCAL_ETH_DEVICE); // index of hub_eth
 #ifdef DUAL_LAN_NETWORK
-if(!nf_get_custom_mode())
+if(!nf_get_dual_lan_mode())
 {
 	if(eth >= 0)
 		sll.sll_ifindex  = if_nametoindex(HUB_ETH_DEVICE); // index of hub_eth
@@ -1031,7 +1031,7 @@ static int check_if_valid_req(DHCP_TRANSACTION* tran)
 	h = get_host_info();
 	s = get_host_netmask();
 #ifdef DUAL_LAN_NETWORK
-if(!nf_get_custom_mode())
+if(!nf_get_dual_lan_mode())
 {
 	//if(tran->port_num >= 8)
     if(discovery[tran->port_num].layer == IPCAM_DISC_LAYER_VHUB)

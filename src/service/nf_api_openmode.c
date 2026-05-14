@@ -562,7 +562,7 @@ extern void nf_openmode_start(void)
 	IPCAM_DBG(MAJOR, "start\n");
 
 #if 0
-	if(nf_get_custom_mode()){
+	if(nf_get_dual_lan_mode()){
 		// POE RESET Test
 			int tmp;
 			printf("\e[31mPOE RESET START\e[0m\n");

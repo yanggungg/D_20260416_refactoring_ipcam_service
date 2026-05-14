@@ -1576,7 +1576,7 @@ extern unsigned int get_bridge_info(void)
 	{
 		myaddr = (struct sockaddr_in *) &ifr->ifr_addr;
 
-		if(nf_get_custom_mode())
+		if(nf_get_dual_lan_mode())
 		{
 			if (strcmp(ifr->ifr_name, HUB_ETH_DEVICE))
 			{

@@ -317,7 +317,7 @@ gboolean nf_netif_eth_init(void)
 
 #ifdef DUAL_LAN_NETWORK
 	is_openmode = nf_get_running_mode();//nf_sysdb_get_bool("cam.install.mode");
-	is_custom = nf_get_custom_mode();//nf_sysdb_get_bool("cam.install.dual_lan");
+	is_custom = nf_get_dual_lan_mode();//nf_sysdb_get_bool("cam.install.dual_lan");
 	if(is_openmode == 1)
 	{
 		if(is_custom)
@@ -474,7 +474,7 @@ gboolean nf_netif_init()
 	
 
 	is_dhcp = nf_sysdb_get_bool( "net.proto.dhcpon");			
-	is_custom = nf_get_custom_mode();//nf_sysdb_get_bool("cam.install.dual_lan");
+	is_custom = nf_get_dual_lan_mode();//nf_sysdb_get_bool("cam.install.dual_lan");
 
 	nf_wpa_start(); // IEEE 802.1x supplcant start
 		
@@ -817,7 +817,7 @@ gboolean nf_netif_get_info( NF_NETIF_GET_INFO *ret_info)
 	// else
 		if_get_mac(_eth_dev, ret_info->mac_addr);
 
-	if(nf_get_custom_mode())
+	if(nf_get_dual_lan_mode())
 		ret_info->lan2_ipaddr = ntohl( if_get_ip(HUB_ETH_DEV) );
 
 	if_get_ipv6(HOST_ETH_DEV, IPV6_ADDR_LINKLOCAL, ret_info->ipv6_linklocal, sizeof(ret_info->ipv6_linklocal), NULL);
@@ -1160,7 +1160,7 @@ static void nf_netif_dhcp_server_onoff()
 			sleep(1);
 		//}
 #if 1
-		if(nf_get_custom_mode()){
+		if(nf_get_dual_lan_mode()){
 		// POE RESET Test
 			int tmp;
 			printf("\e[31mPOE RESET START\e[0m\n");
