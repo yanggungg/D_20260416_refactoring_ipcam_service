@@ -22,6 +22,9 @@
 /src/nf_host
 /src/tmp
 
+# 2b) src/ 내 빌드/런타임 생성 파일
+/src/nf_sysdb.conf
+
 # 3) 임시/백업
 *.tmp
 *.bak
