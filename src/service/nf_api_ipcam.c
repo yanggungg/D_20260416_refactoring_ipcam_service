@@ -68,15 +68,16 @@
  *  @brief IPX Pro 멀티 스위치 사용여부(S1향 = 1).
  *  IPX Pro 기본향 및 S1향 세트 공용화를 위한 변수.
  */
-/** @var is_custom_mode
- *  @brief CUSTOM모드(CONFIGURABLE CCTV MODE) ON/OFF 구분 변수.
+/** @var is_dual_lan
+ *  @brief 듀얼랜(외부망 + 내부 PoE) ON/OFF 구분 변수.
+ *         sysdb 키 cam.install.dual_lan 의 캐시 값.
  */
 /** @var is_open_mode
  *  @brief CCTV / OPEN모드 구분 변수.
  */
 static gint use_multi_switch = 0;
 static gint is_open_mode = 0;
-static gint is_custom_mode = 0;
+static gint is_dual_lan = 0;
 static gint support_static_ip_onvif_cam = 1;
 
 /** @var _ipcam_mraw_ch
@@ -402,7 +403,7 @@ void nf_ipcam_stop(void)
 */
 void nf_set_installation_mode(void)
 {
-	is_custom_mode = nf_sysdb_get_bool("cam.install.dual_lan");
+	is_dual_lan = nf_sysdb_get_bool("cam.install.dual_lan");
 	is_open_mode = nf_sysdb_get_bool("cam.install.mode");
 }
 
@@ -412,7 +413,7 @@ void nf_set_installation_mode(void)
  */
 gboolean nf_get_custom_mode(void)
 {
-	return is_custom_mode;
+	return is_dual_lan;
 }
 
 /**
@@ -421,7 +422,7 @@ gboolean nf_get_custom_mode(void)
  */
 gboolean nf_get_dual_lan_mode(void)
 {
-	return is_custom_mode;
+	return is_dual_lan;
 }
 
 /**
