@@ -135,6 +135,18 @@
 - 1 commit 단위 적정성: 18라인/6파일 작은 규모. 의미 단위 1 commit으로 충분.
 - 1.4 구형 제거: 공개 API 아니므로 **즉시 제거 가능**(deprecation alias 불필요).
 
+## 15. Phase 1 코드 작업 완료(2026-05-15)
+
+4단계 commits 적용:
+- `72ffa64` 1.1 새 접근자 `nf_get_dual_lan_mode()` 추가 (prototype 없음, A 옵션).
+- `e1773db` 1.2 호출자 17곳 일괄 교체 (5 파일 +17/-17).
+- `d9e0e5c` 1.3 정적 변수 `is_custom_mode` → `is_dual_lan` + doxygen 의미 정정.
+- 본 commit 1.4 구형 `nf_get_custom_mode()` 정의 제거.
+
+C 코드 내 `nf_get_custom_mode` 매치 0, `nf_get_dual_lan_mode` 매치 18(정의 1 + 호출자 17). 동작 영향 0 (이름과 doxygen만 변경).
+
+다음: 사용자가 `make`로 _IPX_32P5 변형 빌드 + 시나리오 A 듀얼랜 ON/OFF + C 라이브 영상 회귀 확인. 통과 시 Phase 1 종결, Phase 1.5(is_open_mode 정리) 진입.
+
 ---
 
 (이하 phase 진행에 따라 결정 추가)

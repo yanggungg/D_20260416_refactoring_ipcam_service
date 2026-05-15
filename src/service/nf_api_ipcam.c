@@ -408,15 +408,6 @@ void nf_set_installation_mode(void)
 }
 
 /**
- * @brief 현재 CUSTOM모드(CONFIGURABLE CCTV MODE) 상태를 조회한다.
- * @return 0 - NOT CUSTOM, 1 - CUSTOM MODE.
- */
-gboolean nf_get_custom_mode(void)
-{
-	return is_dual_lan;
-}
-
-/**
  * @brief 현재 듀얼랜(dual_lan) 모드 상태를 조회한다.
  * @return 0 - 단일랜, 1 - 듀얼랜(외부망 + 내부 PoE).
  */
